@@ -13,7 +13,7 @@ from torch.autograd import Variable
 
 import numpy as np
 
-from PPIPointNet import PointNetClass
+from PPIPointNet import PointNet
 from dataset import PDB
 from utils import get_lr
 
@@ -68,7 +68,7 @@ print('  Set sizes: %d & %d -> %.1f' % (len(testset), len(dataset), 100*len(test
 # ---- SET UP MODEL ----
 
 print('MODEL PARAMETERS')
-model = PointNetClass(num_points = arg.num_points, num_class = len(dataset.classes))
+model = PointNet(num_points = arg.num_points)
 if arg.model != '': model.load_state_dict(torch.load(arg.model))
 if arg.CUDA: model.cuda()
 print(model)
@@ -97,7 +97,7 @@ for epoch in range(arg.num_epoch):
         
         optimizer.zero_grad()
         prediction = model(points)
-        loss = F.nll_loss(prediction, goal) # Regression -> MSE loss 
+        loss = F.mse_loss(prediction, goal)
         loss.backward()
         
         optimizer.step()
@@ -130,4 +130,4 @@ model.train()
 
 # ---- SAVE MODEL ----
 
-torch.save(classifier.state_dict(), '%s/PPIPointNet.pth' % (arg.out_folder))
+torch.save(model.state_dict(), '%s/PPIPointNet.pth' % (arg.out_folder))

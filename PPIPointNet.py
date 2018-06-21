@@ -27,17 +27,17 @@ class PointNetFeat(nn.Module):
         x = x.view(-1, 1024)
         return x
 
-# Feature to class mapping
-class PointNetClass(nn.Module):
-    def __init__(self, num_points = 2500, num_class = 2):
-        super(PointNetClass, self).__init__()
+# Feature to value mapping
+class PointNet(nn.Module):
+    def __init__(self, num_points = 2500):
+        super(PointNet, self).__init__()
         
         self.num_points = num_points
         self.feat = PointNetFeat(num_points)
         
         self.lin1 = nn.Linear(1024, 512)
         self.lin2 = nn.Linear(512, 256)
-        self.lin3 = nn.Linear(256, num_class)
+        self.lin3 = nn.Linear(256, 1)
         
         self.bn1 = nn.BatchNorm1d(512)
         self.do1 = nn.Dropout(0.3) # or batchnorm1d(256) ?
@@ -49,4 +49,4 @@ class PointNetClass(nn.Module):
         x = F.relu(self.bn1(self.lin1(x)))
         x = F.relu(self.do1(self.lin2(x)))
         x = self.lin3(x)
-        return F.log_softmax(x, dim=-1)
+        return x
