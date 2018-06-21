@@ -54,24 +54,23 @@ print('  ', arg, '\n')
 
 # ---- DATA LOADING ----
 
-dataset = PDB(train = True, npoints = arg.num_points)
+dataset = PDB(train = True, num_points = arg.num_points)
 dataloader = data.DataLoader(dataset,batch_size=arg.batch_size,shuffle=True,num_workers=int(arg.num_workers))
 
-testset = PDB(train = False, npoints = arg.num_points)
+testset = PDB(train = False, num_points = arg.num_points)
 testloader = data.DataLoader(testset,batch_size=arg.batch_size,shuffle=True,num_workers=int(arg.num_workers))
 
 num_batch = len(dataset)/arg.batch_size
 
 print('DATA PARAMETERS')
 print('  Set sizes: %d & %d -> %.1f' % (len(testset), len(dataset), 100*len(testset)/len(dataset)), '%')
-print('  Classes:', len(dataset.classes), '\n')
 
 # ---- SET UP MODEL ----
 
 print('MODEL PARAMETERS')
 model = PointNetClass(num_points = arg.num_points, num_class = len(dataset.classes))
 if arg.model != '': model.load_state_dict(torch.load(arg.model))
-if ard.CUDA: model.cuda()
+if arg.CUDA: model.cuda()
 print(model)
 
 optimizer = optim.SGD(model.parameters(), lr=0.02, momentum=0.9)
