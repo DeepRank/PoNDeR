@@ -14,9 +14,10 @@ from torch.autograd import Variable
 import numpy as np
 
 from PPIPointNet import PointNetClass
+from dataset import PDB
 from utils import get_lr
 
-# OPTION PARSING
+# PRINT INFORMATION 
 
 print('ABOUT')
 print('  Simplified PointNet for Protein-Protein Reaction - Training script')
@@ -34,6 +35,8 @@ print('  Pytorch   -', torch.__version__)
 print('  CUDA      -', torch.version.cuda)
 print('  CUDNN     -', torch.backends.cudnn.version(), '\n')
 
+# ---- OPTION PARSING ----
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--batch_size', type=int,  default=32,   help='Input batch size')
 parser.add_argument('--num_points', type=int,  default=2500, help='Points per point cloud used')
@@ -41,6 +44,7 @@ parser.add_argument('--num_workers',type=int,  default=4,    help='Number of dat
 parser.add_argument('--num_epoch',  type=int,  default=25,   help='Number of epochs to train for')
 parser.add_argument('--cosine_decay', dest='cosine_decay', default=False, action='store_true', help='Use cosine annealing for learning rate decay')
 parser.add_argument('--epoch_decay', dest='epoch_decay', default=False, action='store_true', help='Decay learning rate per epoch')
+parser.add_argument('--CUDA', dest='CUDA', default=False, action='store_true', help='Train on GPU')
 parser.add_argument('--out_folder', type=str,  default='/artifacts',  help='Model output folder')
 parser.add_argument('--model',      type=str,  default='',   help='Model input path')
 
@@ -48,12 +52,12 @@ arg = parser.parse_args(['--num_epoch','3','--cosine_decay', '--epoch_decay'])
 print('RUN PARAMETERS')
 print('  ', arg, '\n')
 
-# DATA LOADING
+# ---- DATA LOADING ----
 
-dataset = TODO(train = True, npoints = arg.num_points)
+dataset = PDB(train = True, npoints = arg.num_points)
 dataloader = data.DataLoader(dataset,batch_size=arg.batch_size,shuffle=True,num_workers=int(arg.num_workers))
 
-testset = TODO(train = False, npoints = arg.num_points)
+testset = PDB(train = False, npoints = arg.num_points)
 testloader = data.DataLoader(testset,batch_size=arg.batch_size,shuffle=True,num_workers=int(arg.num_workers))
 
 num_batch = len(dataset)/arg.batch_size
@@ -62,20 +66,21 @@ print('DATA PARAMETERS')
 print('  Set sizes: %d & %d -> %.1f' % (len(testset), len(dataset), 100*len(testset)/len(dataset)), '%')
 print('  Classes:', len(dataset.classes), '\n')
 
-# SET UP MODEL
+# ---- SET UP MODEL ----
 
+print('MODEL PARAMETERS')
 model = PointNetClass(num_points = arg.num_points, num_class = len(dataset.classes))
-if arg.model != '':
-    model.load_state_dict(torch.load(arg.model))
-#model.cuda()
+if arg.model != '': model.load_state_dict(torch.load(arg.model))
+if ard.CUDA: model.cuda()
 print(model)
 
-#optim.Adam(model.parameters())
 optimizer = optim.SGD(model.parameters(), lr=0.02, momentum=0.9)
 scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, num_batch)
 
-lossProg = np.zeros(len(dataloader)*arg.num_epoch)
-learnProg = np.zeros(len(dataloader)*arg.num_epoch)
+#lossProg = np.zeros(len(dataloader)*arg.num_epoch)
+#learnProg = np.zeros(len(dataloader)*arg.num_epoch)
+
+# ---- MODEL TRAINING ----
 
 print('START TRAINING')
 model.train()
@@ -106,6 +111,8 @@ for epoch in range(arg.num_epoch):
         #lossProg[i+epoch*len(dataloader)]=loss.data[0]
         #learnProg[i+epoch*len(dataloader)]=get_lr(optimizer)[0]
 
+# ---- EVALUATE ON TEST SET ----
+
 model.eval()
 
 correct = 0
@@ -121,5 +128,7 @@ for data in testloader:
 print('Accuracy on test set: %d %%' %(100 * correct / total))
 
 model.train()
+
+# ---- SAVE MODEL ----
 
 torch.save(classifier.state_dict(), '%s/PPIPointNet.pth' % (arg.out_folder))
