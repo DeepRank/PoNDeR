@@ -10,5 +10,5 @@ def get_lr(optimizer):
 
 # Get filename for native conformation from filename for simulated conformation
 def get_ref(decoy_fn):
-    ref_fn = decoy_fn[:-9] + '.pdb'
+    ref_fn = decoy_fn.rsplit( "_", 1 )[ 0 ] + '.pdb'
     return ref_fn 
