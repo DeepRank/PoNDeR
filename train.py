@@ -110,6 +110,10 @@ for epoch in range(arg.num_epoch):
         #lossProg[i+epoch*len(dataloader)]=loss.data[0]
         #learnProg[i+epoch*len(dataloader)]=get_lr(optimizer)[0]
 
+# ---- SAVE MODEL ----
+
+torch.save(model.state_dict(), '%s/PPIPointNet.pth' % (arg.out_folder))
+
 # ---- EVALUATE ON TEST SET ----
 
 model.eval()
@@ -125,9 +129,3 @@ for data in testloader:
     total += target.size(0)
     correct += (pred[1] == target.transpose(0,1)).sum()
 print('Accuracy on test set: %d %%' %(100 * correct / total))
-
-model.train()
-
-# ---- SAVE MODEL ----
-
-torch.save(model.state_dict(), '%s/PPIPointNet.pth' % (arg.out_folder))
