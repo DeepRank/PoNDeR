@@ -8,6 +8,7 @@ All layers receive batch normalization, except the last linear layer where 30% d
 
 # Dependencies
 
+* Python 3.x
 * Model & training: [PyTorch <0.4](https://github.com/pytorch/pytorch) and its dependencies
 * Data conversion: [DeepRank](https://github.com/DeepRank/deeprank) and its dependencies
 
