@@ -1,12 +1,17 @@
 # General
 
-See [PointNet paper](https://arxiv.org/abs/1612.00593) for architecture description. This implementation does not contain the transformer networks, so can be considered the *vanilla* version of PointNet.
+See [PointNet paper](https://arxiv.org/abs/1612.00593) for original architecture description. This implementation differs does not contain the transformer networks, so can be considered the *vanilla* version of PointNet.
 
-Cosine annealing, as well as step learning rate decay, has been implemented to improve generalizability of the trained network. See [Stochastic Gradient Descent with Warm Restarts](https://arxiv.org/abs/1608.03983).
+Other adaptations include cosine annealing learning rate decay, which has been implemented to improve accuracy and generalizability of the trained network. See [Stochastic Gradient Descent with Warm Restarts](https://arxiv.org/abs/1608.03983).
 
 All layers receive batch normalization, except the last linear layer where 30% dropout is applied, again to make the final network generalize better.
 
+# Dependencies
+
+* Model & training: [PyTorch <0.4](https://github.com/pytorch/pytorch) and its dependencies
+* Data conversion: [DeepRank](https://github.com/DeepRank/deeprank) and its dependencies
+
 # Current state
 
-Architecture & training scripts have been fully defined and tested.
-Protein datasets are yet to be implemented, see TODO's in file. 
+* Architecture & training scripts have been fully implemented
+* Protein datasets is a WIP 
