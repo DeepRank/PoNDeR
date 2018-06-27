@@ -83,7 +83,7 @@ scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, num_batch)
 # ---- MODEL TRAINING ----
 
 print('START TRAINING')
-model.train()
+model.train() # Set to training mode
 
 for epoch in range(arg.num_epoch):
     
@@ -117,7 +117,7 @@ torch.save(model.state_dict(), '%s/PPIPointNet.pth' % (arg.out_folder))
 
 # ---- EVALUATE ON TEST SET ----
 
-model.eval()
+model.eval() # Set to testing mode
 
 correct = 0
 total = 0
