@@ -54,10 +54,10 @@ print('  ', arg, '\n')
 
 # ---- DATA LOADING ----
 
-dataset = PDB(train = True, num_points = arg.num_points)
+dataset = PDBset(train = True, num_points = arg.num_points)
 dataloader = data.DataLoader(dataset,batch_size=arg.batch_size,shuffle=True,num_workers=int(arg.num_workers))
 
-testset = PDB(train = False, num_points = arg.num_points)
+testset = PDBset(train = False, num_points = arg.num_points)
 testloader = data.DataLoader(testset,batch_size=arg.batch_size,shuffle=True,num_workers=int(arg.num_workers))
 
 num_batch = len(dataset)/arg.batch_size

@@ -43,10 +43,10 @@ for native_name in os.listdir(arg.native_dir):
                 atFeat.evaluate_pair_interaction()
                 
                 # Get the contact atoms
-                indA, indB = atFeat.sqldb.get_contact_atoms()
+                #indA, indB = atFeat.sqldb.get_contact_atoms()#extend_to_residue=True
                 
                 # Create "point cloud"
-                pc = np.array(atFeat.sqldb.get('x,y,z,eps,sig,charge,chainID',rowID=indA+indB))
+                pc = np.array(atFeat.sqldb.get('x,y,z,eps,sig,charge,chainID')) # ,rowID=indA+indB
             
                 # Get iRMSD
                 sim = StructureSimilarity(decoy_dir+'/'+decoy_name,arg.native_dir+'/'+native_name)
@@ -56,8 +56,12 @@ for native_name in os.listdir(arg.native_dir):
                 integer_encoded = integer_encoded.reshape(len(integer_encoded), 1)
                 onehot_encoded = onehot_encoder.fit_transform(integer_encoded)
                 pc=np.hstack((pc[:,:6],onehot_encoded))
+                
                 irmsds.append(irmsd)
                 pcs.append(pc)
-    pc_file = '/home/lukas'+native_name+'.pickle'
-    with open(pc_file, "wb") as f:
-        pickle.dump([irmsds,pcs], f)
+                pc_file = '/home/lukas/'+native_name[:4]+'.pickle'
+                print(decoy_name,'done',len(pc))
+                
+            pcs=torch.from_numpy(np.array(pcs).astype(np.float)) # Convert to float because, unfortunately, the sql returns everything as strings   
+            with open(pc_file, "wb") as f:
+                pickle.dump([irmsds,pcs], f)
