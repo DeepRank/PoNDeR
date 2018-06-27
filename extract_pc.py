@@ -3,6 +3,7 @@ import argparse
 import os
 import numpy as np
 import pickle
+import torch
 
 from deeprank.features import AtomicFeature
 from deeprank.tools import StructureSimilarity
@@ -29,10 +30,8 @@ for native_name in os.listdir(arg.native_dir):
     if native_name.endswith(".pdb"):
         decoy_dir = arg.decoy_path+'/'+native_name[:4]
         if os.path.isdir(decoy_dir):
-            irmsds = []
-            pcs = []
             for decoy_name in os.listdir(decoy_dir):
-                
+
                 # Declare the feature calculator instance
                 atFeat = AtomicFeature(decoy_dir+'/'+decoy_name, param_charge = param_charge, param_vdw = param_vdw, patch_file = patch_file)
 
@@ -43,10 +42,10 @@ for native_name in os.listdir(arg.native_dir):
                 atFeat.evaluate_pair_interaction()
                 
                 # Get the contact atoms
-                #indA, indB = atFeat.sqldb.get_contact_atoms()#extend_to_residue=True
+                indA, indB = atFeat.sqldb.get_contact_atoms()#extend_to_residue=True
                 
                 # Create "point cloud"
-                pc = np.array(atFeat.sqldb.get('x,y,z,eps,sig,charge,chainID')) # ,rowID=indA+indB
+                pc = np.array(atFeat.sqldb.get('x,y,z,eps,sig,charge,chainID',rowID=indA+indB))  
             
                 # Get iRMSD
                 sim = StructureSimilarity(decoy_dir+'/'+decoy_name,arg.native_dir+'/'+native_name)
@@ -56,12 +55,10 @@ for native_name in os.listdir(arg.native_dir):
                 integer_encoded = integer_encoded.reshape(len(integer_encoded), 1)
                 onehot_encoded = onehot_encoder.fit_transform(integer_encoded)
                 pc=np.hstack((pc[:,:6],onehot_encoded))
+                pc=np.array(pc).astype(np.float) # Convert to float because, unfortunately, the sql returns everything as strings
                 
-                irmsds.append(irmsd)
-                pcs.append(pc)
-                pc_file = '/home/lukas/'+native_name[:4]+'.pickle'
-                print(decoy_name,'done',len(pc))
-                
-            pcs=torch.from_numpy(np.array(pcs).astype(np.float)) # Convert to float because, unfortunately, the sql returns everything as strings   
-            with open(pc_file, "wb") as f:
-                pickle.dump([irmsds,pcs], f)
+                pc_file = '/home/lukas/DR_DATA/pointclouds/'+decoy_name[:-4]+'.pickle' 
+                with open(pc_file, "wb") as f:
+                    pickle.dump([irmsd,pc], f)
+                print(decoy_name,'done')
+    break
