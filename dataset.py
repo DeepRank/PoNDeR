@@ -15,19 +15,14 @@ class PDBset(data.Dataset):
         return len(self.file_list)
 
     def __getitem__(self, idx):
-        pcs = []
-        irmsds = []
+        with open(self.root_dir+self.file_list[idx], "rb") as f:
+            irmsd, pc = pickle.load(f)
 
-        for i, val in enumerate(idx):
-            with open(self.root_dir+self.file_list[val], "rb") as f:
-                irmsd, pc = pickle.load(f)
-                
-                if len(pc) < self.num_points:
-                    point_ids = random.sample(range(len(pc)), len(pc)) + random.sample(range(len(pc)), self.num_points-len(pc))
-                else:
-                    point_ids = random.sample(range(len(pc)), self.num_points)
+            if len(pc) < self.num_points:
+                point_ids = random.sample(range(len(pc)), len(pc)) + random.sample(range(len(pc)), self.num_points-len(pc))
+            else:
+                point_ids = random.sample(range(len(pc)), self.num_points)
 
-                irmsds.append(irmsd)
-                pcs.append(np.take(pc,point_ids,axis=0))
-                
-        return torch.from_numpy(np.stack(pcs)), irmsds
+            pc = np.take(pc,point_ids,axis=0)
+            
+        return torch.from_numpy(pc), irmsd
