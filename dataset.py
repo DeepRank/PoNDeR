@@ -23,9 +23,9 @@ class PDBset(data.Dataset):
                 irmsd, pc = pickle.load(f)
                 
                 if len(pc) < self.num_points:
-                    point_ids = random.sample(range(self.num_points), len(pc)) + random.sample(range(self.num_points), self.num_points-len(pc))
+                    point_ids = random.sample(range(len(pc)), len(pc)) + random.sample(range(self.num_points), self.num_points-len(pc))
                 else:
-                    point_ids = random.sample(range(self.num_points), self.num_points)
+                    point_ids = random.sample(range(len(pc)), self.num_points)
 
                 irmsds.append(irmsd)
                 pcs.append(np.take(pc,point_ids,axis=0))

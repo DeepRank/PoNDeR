@@ -14,7 +14,7 @@ from torch.autograd import Variable
 import numpy as np
 
 from PPIPointNet import PointNet
-from dataset import PDB
+from dataset import PDBset
 from utils import get_lr
 
 # PRINT INFORMATION 
@@ -39,14 +39,15 @@ print('  CUDNN     -', torch.backends.cudnn.version(), '\n')
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--batch_size', type=int,  default=32,   help='Input batch size')
-parser.add_argument('--num_points', type=int,  default=2500, help='Points per point cloud used')
+parser.add_argument('--num_points', type=int,  default=250, help='Points per point cloud used')
 parser.add_argument('--num_workers',type=int,  default=4,    help='Number of data loading workers')
-parser.add_argument('--num_epoch',  type=int,  default=25,   help='Number of epochs to train for')
+parser.add_argument('--num_epoch',  type=int,  default=5,   help='Number of epochs to train for')
 parser.add_argument('--cosine_decay', dest='cosine_decay', default=False, action='store_true', help='Use cosine annealing for learning rate decay')
 parser.add_argument('--epoch_decay', dest='epoch_decay', default=False, action='store_true', help='Decay learning rate per epoch')
 parser.add_argument('--CUDA', dest='CUDA', default=False, action='store_true', help='Train on GPU')
 parser.add_argument('--out_folder', type=str,  default='/artifacts',  help='Model output folder')
 parser.add_argument('--model',      type=str,  default='',   help='Model input path')
+parser.add_argument('--data_path', type=str, default='/home/lukas/DR_DATA/pointclouds/')
 
 arg = parser.parse_args(['--num_epoch','3','--cosine_decay', '--epoch_decay'])
 print('RUN PARAMETERS')
@@ -54,10 +55,10 @@ print('  ', arg, '\n')
 
 # ---- DATA LOADING ----
 
-dataset = PDBset(train = True, num_points = arg.num_points)
+dataset = PDBset(train = True, num_points = arg.num_points, root_dir=arg.data_path)
 dataloader = data.DataLoader(dataset,batch_size=arg.batch_size,shuffle=True,num_workers=int(arg.num_workers))
 
-testset = PDBset(train = False, num_points = arg.num_points)
+testset = PDBset(train = False, num_points = arg.num_points, root_dir=arg.data_path)
 testloader = data.DataLoader(testset,batch_size=arg.batch_size,shuffle=True,num_workers=int(arg.num_workers))
 
 num_batch = len(dataset)/arg.batch_size
