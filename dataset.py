@@ -7,15 +7,20 @@ import numpy as np
 
 class PDBset(data.Dataset):
     def __init__(self, root_dir, train = True, num_points=250):
-        self.file_list = os.listdir(root_dir)
         self.root_dir = root_dir
         self.num_points = num_points
+        if train:
+            self.subfolder = 'train/'
+        else:
+            self.subfolder = 'test/'
+
+        self.file_list = os.listdir(root_dir + subfolder)
 
     def __len__(self):
         return len(self.file_list)
 
     def __getitem__(self, idx):
-        with open(self.root_dir+self.file_list[idx], "rb") as f:
+        with open(self.root_dir + self.subfolder + self.file_list[idx], "rb") as f:
             irmsd, pc = pickle.load(f)
 
             if len(pc) < self.num_points:
