@@ -12,10 +12,15 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import OneHotEncoder
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--decoy_path', type=str, help='Path (absolute) to decoy folders')
-parser.add_argument('--native_dir',type=str, help='Path (absolute) to native files')
+parser.add_argument('--train', dest='train', default=True, action='store_false', help='Train data if True, test data if False')
+parser.add_argument('--root_dir', type=str, help='Absolute path to data')
 
-arg = parser.parse_args(['--decoy_path','/home/lukas/DR_DATA/decoys','--native_dir','/home/lukas/DR_DATA/natives'])
+arg = parser.parse_args(['--root_dir','/home/lukas/DR_DATA/'])
+
+if arg.train:
+    subfolder='train/'
+else:
+    subfolder='test/'
 
 # force field provided with deeprank
 FF = pkg_resources.resource_filename('deeprank.features','') + '/forcefield/'
@@ -26,9 +31,9 @@ patch_file   = FF + 'patch.top'
 label_encoder = LabelEncoder()
 onehot_encoder = OneHotEncoder(sparse=False)
 
-for native_name in os.listdir(arg.native_dir):
+for native_name in os.listdir(arg.root_dir+'natives/'):
     if native_name.endswith(".pdb"):
-        decoy_dir = arg.decoy_path+'/'+native_name[:4]
+        decoy_dir = arg.root_dir+'decoys/'+native_name[:4]
         if os.path.isdir(decoy_dir):
             for decoy_name in os.listdir(decoy_dir):
 
@@ -48,7 +53,7 @@ for native_name in os.listdir(arg.native_dir):
                 pc = np.array(atFeat.sqldb.get('x,y,z,eps,sig,charge,chainID',rowID=indA+indB))  
             
                 # Get iRMSD
-                sim = StructureSimilarity(decoy_dir+'/'+decoy_name,arg.native_dir+'/'+native_name)
+                sim = StructureSimilarity(decoy_dir+'/'+decoy_name,arg.root_dir+'natives/'+native_name)
                 irmsd = sim.compute_irmsd_fast(method='svd',izone=native_name[:4]+'.izone')
 
                 integer_encoded = label_encoder.fit_transform(pc[:,6])
@@ -57,8 +62,7 @@ for native_name in os.listdir(arg.native_dir):
                 pc=np.hstack((pc[:,:6],onehot_encoded))
                 pc=np.array(pc).astype(np.float) # Convert to float because, unfortunately, the sql returns everything as strings
                 
-                pc_file = '/home/lukas/DR_DATA/pointclouds/'+decoy_name[:-4]+'.pickle' 
+                pc_file = arg.root_dir + 'pointclouds/' + subfolder + decoy_name[:-4] + '.pickle' 
                 with open(pc_file, "wb") as f:
                     pickle.dump([irmsd,pc], f)
                 print(decoy_name,'done')
-    break
