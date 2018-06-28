@@ -20,38 +20,37 @@ from utils import get_lr
 # PRINT INFORMATION 
 
 print('ABOUT')
-print('  Simplified PointNet for Protein-Protein Reaction - Training script')
-print('  Lukas De Clercq, 2018, Netherlands eScience Center\n')
+print('    Simplified PointNet for Protein-Protein Reaction - Training script')
+print('    Lukas De Clercq, 2018, Netherlands eScience Center\n')
 
 print('RUNTIME INFORMATION')
-print('  System    -', platform.system(), platform.release(), platform.machine())
-print('  Version   -', platform.version())
-print('  Node      -', platform.node())
-print('  Time      -', datetime.datetime.utcnow(), 'UTC', '\n')
+print('    System    -', platform.system(), platform.release(), platform.machine())
+print('    Version   -', platform.version())
+print('    Node      -', platform.node())
+print('    Time      -', datetime.datetime.utcnow(), 'UTC', '\n')
 
 print('LIBRARY VERSIONS')
-print('  Python    -', platform.python_version(),'on', platform.python_compiler())
-print('  Pytorch   -', torch.__version__)
-print('  CUDA      -', torch.version.cuda)
-print('  CUDNN     -', torch.backends.cudnn.version(), '\n')
+print('    Python    -', platform.python_version(),'on', platform.python_compiler())
+print('    Pytorch   -', torch.__version__)
+print('    CUDA      -', torch.version.cuda)
+print('    CUDNN     -', torch.backends.cudnn.version(), '\n')
 
 # ---- OPTION PARSING ----
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--batch_size', type=int,  default=32,   help='Input batch size')
-parser.add_argument('--num_points', type=int,  default=250, help='Points per point cloud used')
+parser.add_argument('--batch_size', type=int,  default=50,   help='Input batch size')
+parser.add_argument('--num_points', type=int,  default=350, help='Points per point cloud used')
 parser.add_argument('--num_workers',type=int,  default=4,    help='Number of data loading workers')
 parser.add_argument('--num_epoch',  type=int,  default=5,   help='Number of epochs to train for')
 parser.add_argument('--cosine_decay', dest='cosine_decay', default=False, action='store_true', help='Use cosine annealing for learning rate decay')
-parser.add_argument('--epoch_decay', dest='epoch_decay', default=False, action='store_true', help='Decay learning rate per epoch')
 parser.add_argument('--CUDA', dest='CUDA', default=False, action='store_true', help='Train on GPU')
 parser.add_argument('--out_folder', type=str,  default='/artifacts',  help='Model output folder')
 parser.add_argument('--model',      type=str,  default='',   help='Model input path')
 parser.add_argument('--data_path', type=str, default='/home/lukas/DR_DATA/pointclouds/')
 
-arg = parser.parse_args(['--num_epoch','3','--cosine_decay', '--epoch_decay'])
+arg = parser.parse_args()
 print('RUN PARAMETERS')
-print('  ', arg, '\n')
+print('    ', arg, '\n')
 
 # ---- DATA LOADING ----
 
@@ -64,18 +63,19 @@ testloader = data.DataLoader(testset,batch_size=arg.batch_size,shuffle=True,num_
 num_batch = len(dataset)/arg.batch_size
 
 print('DATA PARAMETERS')
-print('  Set sizes: %d & %d -> %.1f' % (len(testset), len(dataset), 100*len(testset)/len(dataset)), '%')
+print('    Set sizes: %d & %d -> %.1f' % (len(testset), len(dataset), 100*len(testset)/len(dataset)), '%')
 
 # ---- SET UP MODEL ----
 
 print('MODEL PARAMETERS')
-model = PointNet(num_points = arg.num_points)
+model = PointNet(num_points = arg.num_points, in_channels = 8)
 if arg.model != '': model.load_state_dict(torch.load(arg.model))
 if arg.CUDA: model.cuda()
 print(model)
 
 optimizer = optim.SGD(model.parameters(), lr=0.02, momentum=0.9)
-scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, num_batch)
+scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, num_batch+1)
+
 
 #lossProg = np.zeros(len(dataloader)*arg.num_epoch)
 #learnProg = np.zeros(len(dataloader)*arg.num_epoch)
@@ -87,29 +87,30 @@ model.train() # Set to training mode
 
 for epoch in range(arg.num_epoch):
     
-    if arg.epoch_decay:
-        scheduler.base_lrs = [0.02*(1-(epoch**2)/(arg.num_epoch**2))]
+    scheduler.base_lrs = [0.002*(1-(epoch**2)/(arg.num_epoch**2))]
+    scheduler.step(epoch=0)
     
     for i, data in enumerate(dataloader, 0):
-        points, goal = data
-        points, goal = Variable(points), Variable(goal[:,0])
+        points, target = data
+        points, target = Variable(points), Variable(target) # Deprecated in PyTorch >=0.4
         points = points.transpose(2,1)
-        #points, goal = points.cuda(), goal.cuda()
+        #points, target = points.cuda(), target.cuda()
         
         optimizer.zero_grad()
         prediction = model(points)
-        loss = F.mse_loss(prediction, goal)
+        loss = F.mse_loss(prediction, target)
         loss.backward()
         
         optimizer.step()
         if arg.cosine_decay:
             scheduler.step() # Decay within batch
         
-        print('  e%d - %d/%d - LR: %f - Loss: %.3f' %(epoch, i, num_batch, get_lr(optimizer)[0], loss))
+        print('    e%d - %d/%d - LR: %f - Loss: %.3f' %(epoch, i, num_batch, get_lr(optimizer)[0], loss))
 
         # For plotting
         #lossProg[i+epoch*len(dataloader)]=loss.data[0]
         #learnProg[i+epoch*len(dataloader)]=get_lr(optimizer)[0]
+    print('')
 
 # ---- SAVE MODEL ----
 
@@ -117,16 +118,18 @@ torch.save(model.state_dict(), '%s/PPIPointNet.pth' % (arg.out_folder))
 
 # ---- EVALUATE ON TEST SET ----
 
+print('START EVALUATION')
 model.eval() # Set to testing mode
 
-correct = 0
-total = 0
+cnt = 0
+loss_sum = 0
 for data in testloader:
     points, target = data
     points = Variable(points)
+    target = Variable(target)
     points = points.transpose(2,1)
-    outputs = model(points)
-    pred = torch.max(outputs.data, 1)
-    total += target.size(0)
-    correct += (pred[1] == target.transpose(0,1)).sum()
-print('Accuracy on test set: %d %%' %(100 * correct / total))
+    prediction = model(points)
+    loss = F.mse_loss(prediction, target, size_average=False)
+    cnt += target.size(0)
+    loss_sum += loss
+print('    Accuracy on test set: %.3f' %(loss_sum / cnt))

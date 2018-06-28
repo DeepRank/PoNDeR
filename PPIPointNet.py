@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 # Feature extraction and point cloud maxpooling
 class PointNetFeat(nn.Module):
-    def __init__(self, num_points = 2500, in_channels = 3):
+    def __init__(self, in_channels, num_points = 250):
         super(PointNetFeat, self).__init__()
         
         self.num_points = num_points
@@ -29,11 +29,12 @@ class PointNetFeat(nn.Module):
 
 # Feature to value mapping
 class PointNet(nn.Module):
-    def __init__(self, num_points = 2500):
+    def __init__(self, in_channels, num_points = 250):
         super(PointNet, self).__init__()
         
         self.num_points = num_points
-        self.feat = PointNetFeat(num_points)
+        self.in_channels = in_channels
+        self.feat = PointNetFeat(in_channels, num_points)
         
         self.lin1 = nn.Linear(1024, 512)
         self.lin2 = nn.Linear(512, 256)

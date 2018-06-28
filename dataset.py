@@ -6,7 +6,7 @@ import random
 import numpy as np
 
 class PDBset(data.Dataset):
-    def __init__(self, root_dir, train = True, num_points=250):
+    def __init__(self, root_dir, num_points, train = True):
         self.root_dir = root_dir
         self.num_points = num_points
         if train:
@@ -14,7 +14,7 @@ class PDBset(data.Dataset):
         else:
             self.subfolder = 'test/'
 
-        self.file_list = os.listdir(root_dir + subfolder)
+        self.file_list = os.listdir(root_dir + self.subfolder)
 
     def __len__(self):
         return len(self.file_list)
@@ -30,4 +30,4 @@ class PDBset(data.Dataset):
 
             pc = np.take(pc,point_ids,axis=0)
             
-        return torch.from_numpy(pc), irmsd
+        return torch.from_numpy(pc).float(), np.float32(irmsd)
