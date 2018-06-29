@@ -77,8 +77,9 @@ print(model)
 optimizer = optim.SGD(model.parameters(), lr=0.02, momentum=0.9)
 scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, num_batch+1)
 
-# ---- INITIAL TEST ----
+# ---- INITIAL TEST SET EVALUATION ----
 
+print('START EVALUATION OF RANDOM WEIGHTS')
 pretrain_test_score = evaluateModel(model, testloader)
 print('    Pre-train test score =', pretrain_test_score)
 
@@ -96,7 +97,7 @@ for epoch in range(arg.num_epoch):
         points, target = data
         points, target = Variable(points), Variable(target) # Deprecated in PyTorch >=0.4
         points = points.transpose(2,1)
-        #points, target = points.cuda(), target.cuda()
+        if arg.CUDA: points, target = points.cuda(), target.cuda()
         
         optimizer.zero_grad()
         prediction = model(points)
@@ -105,7 +106,7 @@ for epoch in range(arg.num_epoch):
         
         optimizer.step()
         if arg.cosine_decay:
-            scheduler.step() # Decay within batch
+            scheduler.step()
         
         print('    e%d - %d/%d - LR: %f - Loss: %.3f' %(epoch, i, num_batch, get_lr(optimizer)[0], loss))
 
@@ -113,10 +114,12 @@ for epoch in range(arg.num_epoch):
 
 # ---- SAVE MODEL ----
 
+print('SAVING MODEL')
 def saveModel(model, arg):
     torch.save(model.state_dict(), '%s/PPIPointNet.pth' % (arg.out_folder))
 
-# ---- EVALUATE ON TEST SET ----
+# ---- FINAL TEST SET EVALUATION ----
 
 print('START EVALUATION')
-
+posttrain_test_score = evaluateModel(model, testloader)
+print('    Post-train test score =', posttrain_test_score)
