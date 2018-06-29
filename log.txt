@@ -1,0 +1,41 @@
+ABOUT
+    Simplified PointNet for Protein-Protein Reaction - Training script
+    Lukas De Clercq, 2018, Netherlands eScience Center
+
+    See attached license
+RUNTIME INFORMATION
+    System    - Linux 4.15.0-23-generic x86_64
+    Version   - #25-Ubuntu SMP Wed May 23 18:02:16 UTC 2018
+    Node      - Blackbook
+    Time      - 2018-06-29 11:50:41.158853 UTC 
+
+LIBRARY VERSIONS
+    Python    - 3.6.5 on GCC 7.2.0
+    Pytorch   - 0.3.1.post3
+    CUDA      - 8.0.61
+    CUDNN     - 7102 
+
+RUN PARAMETERS
+     Namespace(CUDA=False, batch_size=50, cosine_decay=True, data_path='/home/lukas/DR_DATA/temp/', model='', num_epoch=3, num_points=350, num_workers=4, out_folder='/home/lukas/') 
+
+DATA PARAMETERS
+    Set sizes: 2400 & 8398 -> 28.6 %
+MODEL PARAMETERS
+PointNet(
+  (feat): PointNetFeat(
+    (conv1): Conv1d(8, 64, kernel_size=(1,), stride=(1,))
+    (conv2): Conv1d(64, 128, kernel_size=(1,), stride=(1,))
+    (conv3): Conv1d(128, 1024, kernel_size=(1,), stride=(1,))
+    (bn1): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True)
+    (bn2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True)
+    (bn3): BatchNorm1d(1024, eps=1e-05, momentum=0.1, affine=True)
+    (mp1): MaxPool1d(kernel_size=350, stride=350, padding=0, dilation=1, ceil_mode=False)
+  )
+  (lin1): Linear(in_features=1024, out_features=512, bias=True)
+  (lin2): Linear(in_features=512, out_features=256, bias=True)
+  (lin3): Linear(in_features=256, out_features=1, bias=True)
+  (bn1): BatchNorm1d(512, eps=1e-05, momentum=0.1, affine=True)
+  (do1): Dropout(p=0.3)
+  (relu): ReLU()
+)
+START EVALUATION OF RANDOM WEIGHTS
