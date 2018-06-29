@@ -24,13 +24,13 @@ class PDBset(data.Dataset):
         with open(self.root_dir + self.subfolder + self.file_list[idx], "rb") as f:
             irmsd, pc = pickle.load(f)
             # Duplicate points within pointcloud don't matter in PointNet architecture due to maxpooling
-            if len(pc) < num_points:
+            if len(pc) < self.num_points:
                 point_ids = random.sample(range(len(pc)), len(pc))
-                while len(point_ids)<num_points-len(pc):
+                while len(point_ids)<self.num_points-len(pc):
                     point_ids += random.sample(range(len(pc)), len(pc))
-                point_ids += random.sample(range(len(pc)), num_points-len(point_ids))
+                point_ids += random.sample(range(len(pc)), self.num_points-len(point_ids))
             else:
-                point_ids = random.sample(range(len(pc)), num_points)
+                point_ids = random.sample(range(len(pc)), self.num_points)
 
             pc = np.take(pc, point_ids, axis=0)
 
