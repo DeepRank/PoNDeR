@@ -9,11 +9,11 @@ def evaluateModel(model, testloader):
     loss_sum = 0
     for data in testloader:
         points, target = data
-        points = Variable(points)
-        target = Variable(target)
+        points = Variable(points,volatile=True)
+        target = Variable(target,volatile=True)
         points = points.transpose(2, 1)
         prediction = model(points)
         loss = F.mse_loss(prediction, target, size_average=False)
         cnt += target.size(0)
-        loss_sum += loss
+        loss_sum += loss.data[0]
     return loss_sum / cnt

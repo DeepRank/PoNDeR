@@ -1,4 +1,5 @@
 import os
+import sys
 import platform
 import datetime
 import argparse
@@ -37,6 +38,7 @@ print('    Pytorch   -', torch.__version__)
 print('    CUDA      -', torch.version.cuda)
 print('    CUDNN     -', torch.backends.cudnn.version(), '\n')
 
+sys.stdout.flush()
 # ---- OPTION PARSING ----
 
 parser = argparse.ArgumentParser()
@@ -113,6 +115,7 @@ for epoch in range(arg.num_epoch):
             scheduler.step()
 
         print('    e%d - %d/%d - LR: %f - Loss: %.3f' %(epoch, i, num_batch, get_lr(optimizer)[0], loss))
+        sys.stdout.flush()
 
     print('')
 
