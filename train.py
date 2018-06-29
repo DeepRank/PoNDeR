@@ -14,6 +14,7 @@ from torch.autograd import Variable
 import numpy as np
 
 from PPIPointNet import PointNet
+from evaluate import evaluateModel
 from dataset import PDBset
 from utils import get_lr
 
@@ -76,9 +77,10 @@ print(model)
 optimizer = optim.SGD(model.parameters(), lr=0.02, momentum=0.9)
 scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, num_batch+1)
 
+# ---- INITIAL TEST ----
 
-#lossProg = np.zeros(len(dataloader)*arg.num_epoch)
-#learnProg = np.zeros(len(dataloader)*arg.num_epoch)
+pretrain_test_score = evaluateModel(model, testloader)
+print('    Pre-train test score =', pretrain_test_score)
 
 # ---- MODEL TRAINING ----
 
@@ -107,29 +109,14 @@ for epoch in range(arg.num_epoch):
         
         print('    e%d - %d/%d - LR: %f - Loss: %.3f' %(epoch, i, num_batch, get_lr(optimizer)[0], loss))
 
-        # For plotting
-        #lossProg[i+epoch*len(dataloader)]=loss.data[0]
-        #learnProg[i+epoch*len(dataloader)]=get_lr(optimizer)[0]
     print('')
 
 # ---- SAVE MODEL ----
 
-torch.save(model.state_dict(), '%s/PPIPointNet.pth' % (arg.out_folder))
+def saveModel(model, arg):
+    torch.save(model.state_dict(), '%s/PPIPointNet.pth' % (arg.out_folder))
 
 # ---- EVALUATE ON TEST SET ----
 
 print('START EVALUATION')
-model.eval() # Set to testing mode
 
-cnt = 0
-loss_sum = 0
-for data in testloader:
-    points, target = data
-    points = Variable(points)
-    target = Variable(target)
-    points = points.transpose(2,1)
-    prediction = model(points)
-    loss = F.mse_loss(prediction, target, size_average=False)
-    cnt += target.size(0)
-    loss_sum += loss
-print('    Accuracy on test set: %.3f' %(loss_sum / cnt))

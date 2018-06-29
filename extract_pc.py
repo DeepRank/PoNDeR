@@ -36,7 +36,7 @@ for native_name in sorted(os.listdir(arg.root_dir+'natives/')):
         decoy_dir = arg.root_dir+'decoys/'+native_name[:4]
         if os.path.isdir(decoy_dir):
             for decoy_name in os.listdir(decoy_dir):
-                pc_file = arg.root_dir + 'pointclouds/' + subfolder + decoy_name[:-4] + '.pickle' 
+                pc_file = arg.root_dir + 'pointclouds/' + subfolder + decoy_name[:-4] + '.pickle'
                 if os.path.isfile(pc_file):
                     print(decoy_name[:-4],'skipped')
                 else:
