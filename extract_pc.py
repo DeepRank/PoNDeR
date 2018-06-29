@@ -12,8 +12,6 @@ from deeprank.tools import StructureSimilarity
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import OneHotEncoder
 
-from multiprocessing.dummy import Pool as ThreadPool 
-
 parser = argparse.ArgumentParser()
 parser.add_argument('--train', dest='train', default=True, action='store_false', help='Train data if True, test data if False')
 parser.add_argument('--root_dir', type=str, help='Absolute path to data')
@@ -24,8 +22,6 @@ if arg.train:
     subfolder='train/'
 else:
     subfolder='test/'
-
-pool = ThreadPool(4) 
 
 # Force field provided with deeprank
 FF = pkg_resources.resource_filename('deeprank.features','') + '/forcefield/'
@@ -81,4 +77,5 @@ def convertFolder(native_name):
                         except:
                             print(decoy_name[:-4],'did not contain contact atoms')
 
-pool.map(convertFolder, sorted(os.listdir(arg.root_dir+'natives/')))
+for native_name in sorted(os.listdir(arg.root_dir+'natives/')):
+    convertFolder(native_name)
