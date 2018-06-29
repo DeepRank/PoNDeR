@@ -1,1 +1,1 @@
-python python train.py --data_path $1 --out_folder $2  --num_epoch 3 --cosine_decay | tee log.txt
+python train.py --data_path $1 --out_folder $2  --num_epoch 3 --cosine_decay | tee log.txt
