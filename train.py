@@ -81,11 +81,13 @@ print(model)
 
 optimizer = optim.SGD(model.parameters(), lr=0.02, momentum=0.9)
 scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, num_batch+1)
+train_loss_func = nn.SmoothL1Loss()
+test_loss_func = nn.SmoothL1Loss(size_average=False)
 
 # ---- INITIAL TEST SET EVALUATION ----
 
 print('START EVALUATION OF RANDOM WEIGHTS')
-pretrain_test_score = evaluateModel(model, testloader)
+pretrain_test_score = evaluateModel(model, test_loss_func, testloader)
 print('    Pre-train test score =', pretrain_test_score)
 
 # ---- MODEL TRAINING ----
@@ -107,7 +109,7 @@ for epoch in range(arg.num_epoch):
 
         optimizer.zero_grad()
         prediction = model(points)
-        loss = F.mse_loss(prediction, target)
+        loss = train_loss_func(prediction, target)
         loss.backward()
 
         optimizer.step()
@@ -128,6 +130,6 @@ print('    Model saved')
 # ---- FINAL TEST SET EVALUATION ----
 
 print('START EVALUATION')
-posttrain_test_score = evaluateModel(model, testloader)
+posttrain_test_score = evaluateModel(model, test_loss_func, testloader)
 print('    Post-train test score =', posttrain_test_score)
-print('    Improvement:' (pretrain_test_score-posttrain_test_score)/pretrain_test_score, '%')
+print('    Improvement:', 100*(pretrain_test_score-posttrain_test_score)/pretrain_test_score, '%')
