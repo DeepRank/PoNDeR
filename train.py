@@ -18,7 +18,7 @@ import numpy as np
 from PPIPointNet import PointNet
 from evaluate import evaluateModel
 from dataset import PDBset
-from utils import get_lr, saveModel, FavorHighLoss
+from utils import get_lr, saveModel, FavorLowLoss
 
 # PRINT INFORMATION
 
@@ -83,14 +83,13 @@ print(model)
 
 optimizer = optim.SGD(model.parameters(), lr=arg.lr, momentum=0.9)
 scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, num_batch+1)
-train_loss_func = FavorHighLoss()
-test_loss_func = FavorHighLoss(size_average=False)
+train_loss_func = FavorLowLoss()
+test_loss_func = FavorLowLoss(size_average=False)
 
 # ---- INITIAL TEST SET EVALUATION ----
 
 print('START EVALUATION OF RANDOM WEIGHTS')
-pretrain_test_score, x, y = evaluateModel(model, test_loss_func, testloader)
-plt.scatter(x,y, label='Pre-train')
+pretrain_test_score, _, _ = evaluateModel(model, test_loss_func, testloader)
 print('    Pre-train test score =', pretrain_test_score)
 
 # ---- MODEL TRAINING ----
