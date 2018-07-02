@@ -12,12 +12,13 @@ import torch.utils.data as data
 import torchvision.transforms as transforms
 from torch.autograd import Variable
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 from PPIPointNet import PointNet
 from evaluate import evaluateModel
 from dataset import PDBset
-from utils import get_lr, saveModel
+from utils import get_lr, saveModel, FavorHighLoss
 
 # PRINT INFORMATION
 
@@ -51,6 +52,7 @@ parser.add_argument('--CUDA', dest='CUDA', default=False, action='store_true', h
 parser.add_argument('--out_folder', type=str, default='/artifacts',  help='Model output folder')
 parser.add_argument('--model',      type=str, default='',   help='Model input path')
 parser.add_argument('--data_path', type=str, default='/home/lukas/DR_DATA/pointclouds/')
+parser.add_argument('--lr', type=int, default=0.001, help='Learning rate')
 
 arg = parser.parse_args()
 print('RUN PARAMETERS')
@@ -79,15 +81,16 @@ if arg.CUDA:
     model.cuda()
 print(model)
 
-optimizer = optim.SGD(model.parameters(), lr=0.02, momentum=0.9)
+optimizer = optim.SGD(model.parameters(), lr=arg.lr, momentum=0.9)
 scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, num_batch+1)
-train_loss_func = nn.SmoothL1Loss()
-test_loss_func = nn.SmoothL1Loss(size_average=False)
+train_loss_func = FavorHighLoss()
+test_loss_func = FavorHighLoss(size_average=False)
 
 # ---- INITIAL TEST SET EVALUATION ----
 
 print('START EVALUATION OF RANDOM WEIGHTS')
-pretrain_test_score = evaluateModel(model, test_loss_func, testloader)
+pretrain_test_score, x, y = evaluateModel(model, test_loss_func, testloader)
+plt.scatter(x,y, label='Pre-train')
 print('    Pre-train test score =', pretrain_test_score)
 
 # ---- MODEL TRAINING ----
@@ -97,7 +100,7 @@ model.train()  # Set to training mode
 
 for epoch in range(arg.num_epoch):
 
-    scheduler.base_lrs = [0.002*(1-(epoch**2)/(arg.num_epoch**2))]
+    scheduler.base_lrs = [arg.lr*(1-(epoch**2)/(arg.num_epoch**2))]
     scheduler.step(epoch=0)
 
     for i, data in enumerate(dataloader, 0):
@@ -108,7 +111,7 @@ for epoch in range(arg.num_epoch):
             points, target = points.cuda(), target.cuda()
 
         optimizer.zero_grad()
-        prediction = model(points)
+        prediction = model(points).view(-1)
         loss = train_loss_func(prediction, target)
         loss.backward()
 
@@ -116,8 +119,7 @@ for epoch in range(arg.num_epoch):
         if arg.cosine_decay:
             scheduler.step()
 
-        print('    e%d - %d/%d - LR: %f - Loss: %.3f' %(epoch, i, num_batch, get_lr(optimizer)[0], loss))
-        sys.stdout.flush()
+        print('    e%d - %d/%d - LR: %f - Loss: %.3f' %(epoch, i, num_batch, get_lr(optimizer)[0], loss), flush=True)
 
     print('')
 
@@ -130,6 +132,13 @@ print('    Model saved')
 # ---- FINAL TEST SET EVALUATION ----
 
 print('START EVALUATION')
-posttrain_test_score = evaluateModel(model, test_loss_func, testloader)
+posttrain_test_score,x,y = evaluateModel(model, test_loss_func, testloader)
+plt.scatter(x,y, label='Post-train')
+plt.xlim(0,35)
+plt.ylim(0,35)
+plt.xlabel('Truth')
+plt.ylabel('Prediction')
+plt.draw
+plt.savefig('post-train.png')
 print('    Post-train test score =', posttrain_test_score)
 print('    Improvement:', 100*(pretrain_test_score-posttrain_test_score)/pretrain_test_score, '%')
