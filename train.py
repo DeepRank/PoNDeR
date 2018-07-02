@@ -53,6 +53,7 @@ parser.add_argument('--out_folder', type=str, default='/artifacts',  help='Model
 parser.add_argument('--model',      type=str, default='',   help='Model input path')
 parser.add_argument('--data_path', type=str, default='/home/lukas/DR_DATA/pointclouds/')
 parser.add_argument('--lr', type=int, default=0.001, help='Learning rate')
+parser.add_argument('--avg_pool', dest='avg_pool', default=False, action='store_true', help='Use average pooling after for feature pooling (instead of max pooling)')
 
 arg = parser.parse_args()
 print('RUN PARAMETERS')
@@ -74,7 +75,7 @@ print('    Set sizes: %d & %d -> %.1f' %(len(testset), len(dataset), 100*len(tes
 # ---- SET UP MODEL ----
 
 print('MODEL PARAMETERS')
-model = PointNet(num_points=arg.num_points, in_channels=8)
+model = PointNet(num_points=arg.num_points, in_channels=8, avgPool=arg.avg_pool)
 if arg.model != '':
     model.load_state_dict(torch.load(arg.model))
 if arg.CUDA:
