@@ -15,7 +15,7 @@ parser.add_argument('--root_dir', type=str, help='Absolute path to data')
 
 arg = parser.parse_args(['--root_dir', '/home/lukas/DR_DATA/'])
 
-""" # Force field provided with deeprank
+# Force field provided with deeprank
 FF = pkg_resources.resource_filename('deeprank.features', '') + '/forcefield/'
 param_charge = FF + 'protein-allhdg5-4_new.top'
 param_vdw = FF + 'protein-allhdg5-4_new.param'
@@ -61,7 +61,7 @@ for native_name in sorted(os.listdir(arg.root_dir+'natives/')):
                     pcA = np.array(atFeat.sqldb.get('x,y,z,eps,sig,charge', rowID=indA))
                     pcB = np.array(atFeat.sqldb.get('x,y,z,eps,sig,charge', rowID=indB))
                     pcA = np.c_[pcA, np.zeros_like(pcA)]
-                    pcB = np.c_[pcB, np.zeros_like(pcB)]
+                    pcB = np.c_[np.zeros_like(pcB), pcB]
                     pc = np.r_[pcA, pcB].astype(np.float32)
 
                     # Get iRMSD
@@ -76,11 +76,3 @@ for native_name in sorted(os.listdir(arg.root_dir+'natives/')):
                     hf.close()
                 #except:
                     #print(decoy_name[:-4], 'did not contain contact atoms')
-                break """
-    
-
-hq = h5py.File('pointclouds.h5', 'r')
-train = hq.get('train/1AVX')
-ds=train.get('1AVX_100w')
-print(ds.dtype)
-print(np.array(ds))
