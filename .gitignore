@@ -2,3 +2,5 @@
 *.izone
 *.pyc
 log.txt
+*.png
+*.h5
