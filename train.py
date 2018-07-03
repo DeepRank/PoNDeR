@@ -130,10 +130,16 @@ print('    Model saved')
 # ---- FINAL TEST SET EVALUATION ----
 
 print('START EVALUATION')
-posttrain_train_score,x,y = evaluateModel(model, test_loss_func, dataloader)
-plt.scatter(x,y, label='Train',s=3)
-posttrain_test_score,x,y = evaluateModel(model, test_loss_func, testloader)
-plt.scatter(x,y, label='Test',s=3)
+
+posttrain_test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader)
+
+print('    Post-train test score =', posttrain_test_score)
+print('    Improvement:', 100*(pretrain_test_score-posttrain_test_score)/pretrain_test_score, '%')
+
+posttrain_train_score,x2,y2 = evaluateModel(model, test_loss_func, dataloader)
+
+plt.scatter(x2,y2, label='Train',s=3)
+plt.scatter(x1,y1, label='Test',s=3)
 
 plt.axis('equal')
 plt.xlabel('Truth')
@@ -141,5 +147,3 @@ plt.ylabel('Prediction')
 plt.legend(loc=4)
 plt.draw
 plt.savefig('post-train.png')
-print('    Post-train test score =', posttrain_test_score)
-print('    Improvement:', 100*(pretrain_test_score-posttrain_test_score)/pretrain_test_score, '%')
