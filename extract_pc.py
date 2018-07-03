@@ -45,7 +45,6 @@ for native_name in sorted(os.listdir(arg.root_dir+'natives/')):
     decoy_dir = arg.root_dir+'decoys/'+native_name[:4]
     if os.path.isdir(decoy_dir):
         group = getGroup(native_name)
-        i+=1
         print('Putting', native_name[:4], 'in', group.name)
         for decoy_name in sorted(os.listdir(decoy_dir)):
             # Declare the feature calculator instance
