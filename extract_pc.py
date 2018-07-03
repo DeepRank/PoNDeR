@@ -10,6 +10,7 @@ import random
 from deeprank.features import AtomicFeature
 from deeprank.tools import StructureSimilarity
 
+# Parser
 parser = argparse.ArgumentParser()
 parser.add_argument('--root_dir', type=str, help='Absolute path to data')
 
@@ -21,58 +22,89 @@ param_charge = FF + 'protein-allhdg5-4_new.top'
 param_vdw = FF + 'protein-allhdg5-4_new.param'
 patch_file = FF + 'patch.top'
 
+# Prepare folders
+os.makedirs('lzone', exist_ok=True)
+os.makedirs('izone', exist_ok=True)
+os.makedirs('refpairs', exist_ok=True)
+
+# Prepare HDF5 file & groups
 hf = h5py.File('pointclouds.h5', 'w')
 
 g_test = hf.create_group('test')
 g_train = hf.create_group('train')
 g_holdout = hf.create_group('holdout')
 
-def getSubgroup(native_name):
+# Random distribution of protein pairs among groups
+def getGroup(native_name):
     rand = random.random()
     if rand < 0.8:
-        subgroup = g_train.create_group(native_name[:4])
+        group = g_train
     elif rand < 0.9:
-        subgroup = g_test.create_group(native_name[:4])
+        group = g_test
     else:
-        subgroup = g_holdout.create_group(native_name[:4])
-    return subgroup
+        group = g_holdout
+    return group
+i = 0
 
+# Start converting
 for native_name in sorted(os.listdir(arg.root_dir+'natives/')):
-    if native_name.endswith(".pdb"):
-        decoy_dir = arg.root_dir+'decoys/'+native_name[:4]
-        if os.path.isdir(decoy_dir):
-            subgroup = getSubgroup(native_name)
-            print('Putting', native_name[:4], 'in', subgroup.name)
-            for decoy_name in sorted(os.listdir(decoy_dir)):
-                # Declare the feature calculator instance
-                atFeat = AtomicFeature(decoy_dir+'/'+decoy_name, param_charge=param_charge, param_vdw=param_vdw, patch_file=patch_file)
+    decoy_dir = arg.root_dir+'decoys/'+native_name[:4]
+    if os.path.isdir(decoy_dir):
+        group = getGroup(native_name)
+        i+=1
+        print('Putting', native_name[:4], 'in', group.name)
+        for decoy_name in os.listdir(decoy_dir):
+            # Declare the feature calculator instance
+            atFeat = AtomicFeature(decoy_dir+'/'+decoy_name, param_charge=param_charge, param_vdw=param_vdw, patch_file=patch_file)
 
-                # Assign parameters
-                atFeat.assign_parameters()
-                
-                try:
-                    # Compute the pair interactions
-                    atFeat.evaluate_pair_interaction()
+            # Assign parameters
+            atFeat.assign_parameters()
+            
+            try:
+                # Compute the pair interactions
+                atFeat.evaluate_pair_interaction()
 
-                    # Get the contact atoms
-                    indA, indB = atFeat.sqldb.get_contact_atoms()
+                # Get contact pairs, append features
+                    # x, y, z   -> Coordinates
+                    # occ       -> Occupancy
+                    # temp      -> Temperature factor (uncertainty)
+                    # eps       -> 
+                    # sig       -> Sigma (?)
+                    # charge    ->
+                pc_pairs = []
+                index = atFeat.sqldb.get_contact_atoms(return_contact_pairs=True)
+                for key,val in index.items():
+                    pc1 = atFeat.sqldb.get('x,y,z,eps,sig,charge',rowID=key)[0]
+                    pc2 = atFeat.sqldb.get('x,y,z,eps,sig,charge',rowID=val)
+                    a = np.array(pc1[0:3], dtype=np.float32)
+                    
+                    for p in pc2:
+                        b = np.array(p[0:3], dtype=np.float32)
+                        dist = np.linalg.norm(a-b) # Euclidian distance
+                        pc_pairs.append(pc1+p+dist)
+                        
 
-                    # Create "point cloud"
-                    pcA = np.array(atFeat.sqldb.get('x,y,z,eps,sig,charge', rowID=indA))
-                    pcB = np.array(atFeat.sqldb.get('x,y,z,eps,sig,charge', rowID=indB))
-                    pcA = np.c_[pcA, np.zeros_like(pcA)]
-                    pcB = np.c_[np.zeros_like(pcB), pcB]
-                    pc = np.r_[pcA, pcB].astype(np.float32)
+                # List of atom pair parameters to array
+                pc = np.vstack(pc_pairs).astype(np.float32) 
 
-                    # Get iRMSD
-                    sim = StructureSimilarity(decoy_dir+'/'+decoy_name, arg.root_dir+'natives/'+native_name)
-                    irmsd = sim.compute_irmsd_fast(method='svd', izone='izone/'+native_name[:4]+'.izone')
+                # Get metrics
+                sim = StructureSimilarity(decoy_dir+'/'+decoy_name, arg.root_dir+'natives/'+native_name)
+                irmsd = sim.compute_irmsd_fast(method='svd', izone='izone/'+native_name[:4]+'.izone')
+                lrmsd = sim.compute_lrmsd_fast(method='svd',lzone='lzone/'+native_name[:4]+'.lzone')
+                fnat = sim.compute_Fnat_fast(ref_pairs='refpairs/'+native_name[:4]+'.refpairs')
+                dockQ = sim.compute_DockQScore(fnat,lrmsd,irmsd)
 
-                    # Save file
-                    ds = subgroup.create_dataset(decoy_name[:-4], data = pc)
-                    ds.attrs['irmsd'] = irmsd
-                    print(decoy_name[:-4], 'done')
-                except KeyboardInterrupt:
-                    hf.close()
-                #except:
-                    #print(decoy_name[:-4], 'did not contain contact atoms')
+                # Save file
+                ds = group.create_dataset(decoy_name[:-4], data = pc)
+                ds.attrs['irmsd'] = irmsd
+                ds.attrs['lrmsd'] = lrmsd
+                ds.attrs['fnat'] = fnat
+                ds.attrs['dockQ'] = dockQ
+                print('    ',decoy_name[:-4], 'done')
+            except KeyboardInterrupt:
+                hf.close()
+                sys.exit()
+            except:
+                print(decoy_name[:-4], 'did not contain contact atoms')
+    if i == 10: break
+hf.close()
