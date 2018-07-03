@@ -61,10 +61,10 @@ print('    ', arg, '\n')
 
 # ---- DATA LOADING ----
 
-dataset = PDBset(train=True, num_points=arg.num_points, root_dir=arg.data_path)
+dataset = PDBset(hdf5_file=arg.data_path, group='train', num_points=arg.num_points)
 dataloader = data.DataLoader(dataset, batch_size=arg.batch_size, shuffle=True, num_workers=int(arg.num_workers))
 
-testset = PDBset(train=False, num_points=arg.num_points,root_dir=arg.data_path)
+testset = PDBset(hdf5_file=arg.data_path, group='test', num_points=arg.num_points)
 testloader = data.DataLoader(testset, batch_size=arg.batch_size, shuffle=True, num_workers=int(arg.num_workers))
 
 num_batch = len(dataset)/arg.batch_size
@@ -75,7 +75,7 @@ print('    Set sizes: %d & %d -> %.1f' %(len(testset), len(dataset), 100*len(tes
 # ---- SET UP MODEL ----
 
 print('MODEL PARAMETERS')
-model = PointNet(num_points=arg.num_points, in_channels=8, avgPool=arg.avg_pool)
+model = PointNet(num_points=arg.num_points, in_channels=13, avgPool=arg.avg_pool)
 if arg.model != '':
     model.load_state_dict(torch.load(arg.model))
 if arg.CUDA:
