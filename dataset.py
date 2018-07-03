@@ -6,18 +6,20 @@ import random
 import numpy as np
 import h5py
 
+# No more than one worker can be used for this type of dataset as HDF5 does not multithread appropriately
 
 class PDBset(data.Dataset):
     def __init__(self, hdf5_file, num_points, group='train'):
         self.hf = h5py.File(hdf5_file,'r')
         self.num_points = num_points
-        self.keys = list(self.hf[group].keys())
+        self.group = self.hf[group]
+        self.keys = list(self.group.keys())
 
     def __len__(self):
         return len(self.keys)
 
     def __getitem__(self, idx):
-        ds = self.hf.get(self.keys[idx])
+        ds = self.group.get(self.keys[idx])
         pc = np.array(ds)
         dockQ = ds.attrs['dockQ']
 
