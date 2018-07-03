@@ -45,14 +45,14 @@ sys.stdout.flush()
 parser = argparse.ArgumentParser()
 parser.add_argument('--batch_size', type=int, default=50, help='Input batch size')
 parser.add_argument('--num_points', type=int, default=350, help='Points per point cloud used')
-parser.add_argument('--num_workers', type=int,  default=4, help='Number of data loading workers')
+parser.add_argument('--num_workers', type=int,  default=1, help='Number of data loading workers')
 parser.add_argument('--num_epoch',  type=int,  default=5, help='Number of epochs to train for')
 parser.add_argument('--cosine_decay', dest='cosine_decay', default=False, action='store_true', help='Use cosine annealing for learning rate decay')
 parser.add_argument('--CUDA', dest='CUDA', default=False, action='store_true', help='Train on GPU')
 parser.add_argument('--out_folder', type=str, default='/artifacts',  help='Model output folder')
 parser.add_argument('--model',      type=str, default='',   help='Model input path')
 parser.add_argument('--data_path', type=str, default='/home/lukas/DR_DATA/pointclouds/')
-parser.add_argument('--lr', type=int, default=0.001, help='Learning rate')
+parser.add_argument('--lr', type=float, default=0.01, help='Learning rate')
 parser.add_argument('--avg_pool', dest='avg_pool', default=False, action='store_true', help='Use average pooling after for feature pooling (instead of max pooling)')
 
 arg = parser.parse_args()
@@ -70,12 +70,12 @@ testloader = data.DataLoader(testset, batch_size=arg.batch_size, shuffle=True, n
 num_batch = len(dataset)/arg.batch_size
 
 print('DATA PARAMETERS')
-print('    Set sizes: %d & %d -> %.1f' %(len(testset), len(dataset), 100*len(testset)/len(dataset)), '%')
+print('    Test & train sizes: %d & %d -> %.1f' %(len(testset), len(dataset), 100*len(testset)/len(dataset)), '%')
 
 # ---- SET UP MODEL ----
 
 print('MODEL PARAMETERS')
-model = PointNet(num_points=arg.num_points, in_channels=13, avgPool=arg.avg_pool)
+model = PointNet(num_points=arg.num_points, in_channels=12, avgPool=arg.avg_pool)
 if arg.model != '':
     model.load_state_dict(torch.load(arg.model))
 if arg.CUDA:
@@ -84,14 +84,14 @@ print(model)
 
 optimizer = optim.SGD(model.parameters(), lr=arg.lr, momentum=0.9)
 scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, num_batch+1)
-train_loss_func = FavorLowLoss()
-test_loss_func = FavorLowLoss(size_average=False)
+train_loss_func = nn.L1Loss()
+test_loss_func =nn.L1Loss(size_average=False)
 
 # ---- INITIAL TEST SET EVALUATION ----
 
 print('START EVALUATION OF RANDOM WEIGHTS')
 pretrain_test_score, _, _ = evaluateModel(model, test_loss_func, testloader)
-print('    Pre-train test score =', pretrain_test_score)
+print('    Pre-train test score = %.5f' %(pretrain_test_score))
 
 # ---- MODEL TRAINING ----
 
@@ -119,7 +119,7 @@ for epoch in range(arg.num_epoch):
         if arg.cosine_decay:
             scheduler.step()
 
-        print('    e%d - %d/%d - LR: %f - Loss: %.3f' %(epoch, i, num_batch, get_lr(optimizer)[0], loss), flush=True)
+        print('    e%d - %d/%d - LR: %f - Loss: %.5f' %(epoch, i, num_batch, get_lr(optimizer)[0], loss), flush=True)
 
     print('')
 
@@ -132,12 +132,13 @@ print('    Model saved')
 # ---- FINAL TEST SET EVALUATION ----
 
 print('START EVALUATION')
+posttrain_train_score,x,y = evaluateModel(model, test_loss_func, dataloader)
+plt.scatter(x,y, label='Train')
 posttrain_test_score,x,y = evaluateModel(model, test_loss_func, testloader)
-plt.scatter(x,y, label='Post-train')
-plt.xlim(0,35)
-plt.ylim(0,35)
+plt.scatter(x,y, label='Test')
 plt.xlabel('Truth')
 plt.ylabel('Prediction')
+plt.legend(loc=4)
 plt.draw
 plt.savefig('post-train.png')
 print('    Post-train test score =', posttrain_test_score)
