@@ -1,5 +1,7 @@
 .vscode/
 *.izone
+*.lzone
+*.refpairs
 *.pyc
 log.txt
 *.png
