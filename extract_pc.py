@@ -75,7 +75,7 @@ for native_name in sorted(os.listdir(arg.root_dir+'natives/')):
                     for p in pc2:
                         b = np.array(p[0:3], dtype=np.float32)
                         dist = np.linalg.norm(a-b) # Euclidian distance
-                        pc_pairs.append(pc1+p+dist)
+                        pc_pairs.append(pc1+p+[dist])
                                 
                 # List of atom pair parameters to array
                 pc = np.vstack(pc_pairs).astype(np.float32) 
