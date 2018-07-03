@@ -22,11 +22,6 @@ param_charge = FF + 'protein-allhdg5-4_new.top'
 param_vdw = FF + 'protein-allhdg5-4_new.param'
 patch_file = FF + 'patch.top'
 
-# Prepare folders
-os.makedirs('lzone', exist_ok=True)
-os.makedirs('izone', exist_ok=True)
-os.makedirs('refpairs', exist_ok=True)
-
 # Prepare HDF5 file & groups
 hf = h5py.File('pointclouds.h5', 'w')
 
@@ -44,7 +39,6 @@ def getGroup(native_name):
     else:
         group = g_holdout
     return group
-i = 0
 
 # Start converting
 for native_name in sorted(os.listdir(arg.root_dir+'natives/')):
@@ -53,26 +47,27 @@ for native_name in sorted(os.listdir(arg.root_dir+'natives/')):
         group = getGroup(native_name)
         i+=1
         print('Putting', native_name[:4], 'in', group.name)
-        for decoy_name in os.listdir(decoy_dir):
+        for decoy_name in sorted(os.listdir(decoy_dir)):
             # Declare the feature calculator instance
             atFeat = AtomicFeature(decoy_dir+'/'+decoy_name, param_charge=param_charge, param_vdw=param_vdw, patch_file=patch_file)
 
             # Assign parameters
             atFeat.assign_parameters()
             
-            try:
-                # Compute the pair interactions
-                atFeat.evaluate_pair_interaction()
+            # Compute the pair interactions
+            atFeat.evaluate_pair_interaction()
 
-                # Get contact pairs, append features
-                    # x, y, z   -> Coordinates
-                    # occ       -> Occupancy
-                    # temp      -> Temperature factor (uncertainty)
-                    # eps       -> 
-                    # sig       -> Sigma (?)
-                    # charge    ->
-                pc_pairs = []
-                index = atFeat.sqldb.get_contact_atoms(return_contact_pairs=True)
+            # Get contact pairs, append features
+                # x, y, z   -> Coordinates
+                # occ       -> Occupancy
+                # temp      -> Temperature factor (uncertainty)
+                # eps       -> 
+                # sig       -> Sigma (?)
+                # charge    ->
+            pc_pairs = []
+            index = atFeat.sqldb.get_contact_atoms(return_contact_pairs=True, cutoff=6.5)
+
+            if index: # If not empty
                 for key,val in index.items():
                     pc1 = atFeat.sqldb.get('x,y,z,eps,sig,charge',rowID=key)[0]
                     pc2 = atFeat.sqldb.get('x,y,z,eps,sig,charge',rowID=val)
@@ -82,29 +77,24 @@ for native_name in sorted(os.listdir(arg.root_dir+'natives/')):
                         b = np.array(p[0:3], dtype=np.float32)
                         dist = np.linalg.norm(a-b) # Euclidian distance
                         pc_pairs.append(pc1+p+dist)
-                        
-
+                                
                 # List of atom pair parameters to array
                 pc = np.vstack(pc_pairs).astype(np.float32) 
 
                 # Get metrics
                 sim = StructureSimilarity(decoy_dir+'/'+decoy_name, arg.root_dir+'natives/'+native_name)
-                irmsd = sim.compute_irmsd_fast(method='svd', izone='izone/'+native_name[:4]+'.izone')
-                lrmsd = sim.compute_lrmsd_fast(method='svd',lzone='lzone/'+native_name[:4]+'.lzone')
-                fnat = sim.compute_Fnat_fast(ref_pairs='refpairs/'+native_name[:4]+'.refpairs')
+                irmsd = sim.compute_irmsd_fast(method='svd')
+                lrmsd = sim.compute_lrmsd_fast(method='svd')
+                fnat = sim.compute_Fnat_fast()
                 dockQ = sim.compute_DockQScore(fnat,lrmsd,irmsd)
 
                 # Save file
                 ds = group.create_dataset(decoy_name[:-4], data = pc)
                 ds.attrs['irmsd'] = irmsd
                 ds.attrs['lrmsd'] = lrmsd
-                ds.attrs['fnat'] = fnat
+                ds.attrs['fnat']  = fnat
                 ds.attrs['dockQ'] = dockQ
                 print('    ',decoy_name[:-4], 'done')
-            except KeyboardInterrupt:
-                hf.close()
-                sys.exit()
-            except:
+            else:
                 print(decoy_name[:-4], 'did not contain contact atoms')
-    if i == 10: break
 hf.close()
