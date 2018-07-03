@@ -13,6 +13,7 @@ import torchvision.transforms as transforms
 from torch.autograd import Variable
 
 import matplotlib.pyplot as plt
+import matplotlib.axes as axs
 import numpy as np
 
 from PPIPointNet import PointNet
@@ -114,13 +115,10 @@ for epoch in range(arg.num_epoch):
         prediction = model(points).view(-1)
         loss = train_loss_func(prediction, target)
         loss.backward()
-
+        print('    e%d - %d/%d - LR: %f - Loss: %.5f' %(epoch, i, num_batch, get_lr(optimizer)[0], loss), flush=True)
         optimizer.step()
         if arg.cosine_decay:
             scheduler.step()
-
-        print('    e%d - %d/%d - LR: %f - Loss: %.5f' %(epoch, i, num_batch, get_lr(optimizer)[0], loss), flush=True)
-
     print('')
 
 # ---- SAVE MODEL ----
@@ -133,9 +131,11 @@ print('    Model saved')
 
 print('START EVALUATION')
 posttrain_train_score,x,y = evaluateModel(model, test_loss_func, dataloader)
-plt.scatter(x,y, label='Train')
+plt.scatter(x,y, label='Train',s=3)
 posttrain_test_score,x,y = evaluateModel(model, test_loss_func, testloader)
-plt.scatter(x,y, label='Test')
+plt.scatter(x,y, label='Test',s=3)
+
+plt.axis('equal')
 plt.xlabel('Truth')
 plt.ylabel('Prediction')
 plt.legend(loc=4)
