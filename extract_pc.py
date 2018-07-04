@@ -50,7 +50,7 @@ def getGroup(native_name):
 
 # Start converting
 for native_name in sorted(os.listdir(arg.root_dir+arg.native_dir)):
-    decoy_dir = arg.root_dir+arg.decoy_dir+native_name[:4]+arg.decoy_subdir
+    decoy_dir = arg.root_dir+arg.decoy_dir+native_name[:4]+'/'+arg.decoy_subdir
     if os.path.isdir(decoy_dir):
         group = getGroup(native_name)
         print('Putting', native_name[:4], 'in', group.name)
@@ -79,7 +79,7 @@ for native_name in sorted(os.listdir(arg.root_dir+arg.native_dir)):
                 pcA = np.array(atFeat.sqldb.get('x,y,z,eps,sig,charge', rowID=indA)).astype(np.float32)
                 pcB = np.array(atFeat.sqldb.get('x,y,z,eps,sig,charge', rowID=indB)).astype(np.float32)
 
-                if arg.dual:
+                if not arg.dual:
                     pcA = np.c_[pcA, np.zeros_like(pcA)]
                     pcB = np.c_[np.zeros_like(pcB), pcB]
                     pc = np.r_[pcA, pcB].astype(np.float32)
