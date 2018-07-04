@@ -40,9 +40,9 @@ g_holdout = hf.create_group('holdout')
 # Random distribution of protein pairs among groups
 def getGroup(native_name):
     rand = random.random()
-    if rand < 0.8:
+    if rand < 0.7:
         group = g_train
-    elif rand < 0.9:
+    elif rand < 0.85:
         group = g_test
     else:
         group = g_holdout
@@ -54,7 +54,7 @@ for native_name in sorted(os.listdir(arg.root_dir+arg.native_dir)):
     if os.path.isdir(decoy_dir):
         group = getGroup(native_name)
         print('Putting', native_name[:4], 'in', group.name)
-        for decoy_name in os.listdir(decoy_dir):
+        for decoy_name in sorted(os.listdir(decoy_dir)):
             # Declare the feature calculator instance
             atFeat = AtomicFeature(decoy_dir+'/'+decoy_name, param_charge=param_charge, param_vdw=param_vdw, patch_file=patch_file)
 
@@ -74,7 +74,7 @@ for native_name in sorted(os.listdir(arg.root_dir+arg.native_dir)):
             indA, indB = atFeat.sqldb.get_contact_atoms(cutoff=6.5)
 
             if len(indA)==0: # If no contact atoms found
-                print(decoy_name[:-4], 'did not contain contact atoms')
+                print('    ', decoy_name[:-4], 'did not contain contact atoms')
             else: 
                 pcA = np.array(atFeat.sqldb.get('x,y,z,eps,sig,charge', rowID=indA)).astype(np.float32)
                 pcB = np.array(atFeat.sqldb.get('x,y,z,eps,sig,charge', rowID=indB)).astype(np.float32)
