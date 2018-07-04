@@ -10,6 +10,14 @@ import random
 from deeprank.features import AtomicFeature
 from deeprank.tools import StructureSimilarity
 
+'''
+KNOWN ERROR
+
+Decoy folders can't contain any files that aren't pdb's.
+This can be implemented through a check or just running following command while in the folder:
+    find . -type -f ! -name "*.pdb" -delete
+'''
+
 # Parser
 parser = argparse.ArgumentParser()
 parser.add_argument('--root_dir', type=str, default='/home/lukas/DR_DATA/', help='Path to data')
