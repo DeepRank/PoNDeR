@@ -84,9 +84,9 @@ print('    Test & train sizes: %d & %d -> %.1f' %(len(testset), len(dataset), 10
 
 print('MODEL PARAMETERS')
 if arg.dual:
-    model = PointNet(num_points=arg.num_points, in_channels=6, avgPool=arg.avg_pool, sigmoid = True)
-else:
     model = DualPointNet(num_points=arg.num_points, in_channels=6, avgPool=arg.avg_pool, sigmoid = True)
+else:
+    model = PointNet(num_points=arg.num_points, in_channels=6, avgPool=arg.avg_pool, sigmoid = True)
 
 if arg.model != '':
     model.load_state_dict(torch.load(arg.model))
