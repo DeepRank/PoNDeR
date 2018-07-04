@@ -21,7 +21,7 @@ import numpy as np
 
 from PPIPointNet import PointNet, DualPointNet
 from evaluate import evaluateModel
-from dataset import PDBset
+from dataset import PDBset, DualPDBset
 from utils import get_lr, saveModel, FavorLowLoss
 
 # PRINT INFORMATION
@@ -65,10 +65,14 @@ print('    ', arg, '\n', flush=True)
 
 # ---- DATA LOADING ----
 
-dataset = PDBset(hdf5_file=arg.data_path, group='train', num_points=arg.num_points)
-dataloader = data.DataLoader(dataset, batch_size=arg.batch_size, shuffle=True, num_workers=int(arg.num_workers))
+if arg.dual:
+    dataset = DualPDBset(hdf5_file=arg.data_path, group='train', num_points=arg.num_points)
+    testset = DualPDBset(hdf5_file=arg.data_path, group='test', num_points=arg.num_points)
+else:
+    dataset = PDBset(hdf5_file=arg.data_path, group='train', num_points=arg.num_points)
+    testset = PDBset(hdf5_file=arg.data_path, group='test', num_points=arg.num_points)
 
-testset = PDBset(hdf5_file=arg.data_path, group='test', num_points=arg.num_points)
+dataloader = data.DataLoader(dataset, batch_size=arg.batch_size, shuffle=True, num_workers=int(arg.num_workers))
 testloader = data.DataLoader(testset, batch_size=arg.batch_size, shuffle=True, num_workers=int(arg.num_workers))
 
 num_batch = len(dataset)/arg.batch_size
