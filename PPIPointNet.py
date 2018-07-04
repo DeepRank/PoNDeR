@@ -37,6 +37,7 @@ class PointNet(nn.Module):
     def __init__(self, in_channels, num_points=250, avgPool=False, sigmoid=False):
         super(PointNet, self).__init__()
 
+        self.sigmoid = sigmoid
         self.num_points = num_points
         self.in_channels = in_channels
         self.feat = PointNetFeat(in_channels, num_points, avgPool)
@@ -63,6 +64,7 @@ class PointNet(nn.Module):
 class DualPointNet(nn.Module):
     def __init__(self, in_channels, num_points=250, avgPool=False, sigmoid=False):
         super(DualPointNet, self).__init__()
+
         self.sigmoid = sigmoid
         self.num_points = num_points
         self.in_channels = in_channels
@@ -78,7 +80,10 @@ class DualPointNet(nn.Module):
         self.relu = nn.ReLU()
 
     def forward(self, ab):
-        a, b = torch.split(ab, self.num_points, dim=0) # Split between proteins (see dataset where original concatenation happens)
+        print(ab.shape)
+        (a, b) = torch.split(ab, self.num_points, dim=0) # Split between proteins (see dataset where original concatenation happens)
+        print(a.shape)
+        print(b.shape)
         a = self.feat(a)
         b = self.feat(b)
         x = torch.cat((a,b), dim=0) # Concatenate both global features before passing to fully connected network
