@@ -108,4 +108,6 @@ for native_name in sorted(os.listdir(arg.root_dir+arg.native_dir)):
                     ds.attrs['dockQ'] = dockQ
                 print('    ',decoy_name[:-4], 'done')
             break # for testing
+    else:
+        print(decoy_dir, 'not found')
 hf.close()
