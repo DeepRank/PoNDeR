@@ -77,10 +77,10 @@ class DualPointNet(nn.Module):
 
         self.relu = nn.ReLU()
 
-    def forward(self, a, b):
-        a = self.feat(a)
-        b = self.feat(b)
-        x = torch.cat() # Concatenate both global features before passing to fully connected network
+    def forward(self, ab):
+        a = self.feat(ab[0])
+        b = self.feat(ab[1])
+        x = torch.cat((a,b)) # Concatenate both global features before passing to fully connected network
         x = F.relu(self.bn1(self.lin1(x)))
         x = F.relu(self.do1(self.lin2(x)))
         x = self.lin3(x)

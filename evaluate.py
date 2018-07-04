@@ -16,7 +16,7 @@ def evaluateModel(model, loss_func, testloader, dual = False, CUDA = False):
             pointsA, pointsB = pointsA.transpose(2,1), pointsB.transpose(2,1)
             if CUDA:
                 pointsA, pointsB, target = pointsA.cuda(), pointsB.cuda(), target.cuda()
-            prediction = model(pointsA, pointsB).view(-1)
+            prediction = model((pointsA, pointsB)).view(-1)
         else:
             points, target = data
             points, target = Variable(points, volatile=True), Variable(target, volatile=True)  # Deprecated in PyTorch >=0.4
