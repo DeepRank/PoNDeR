@@ -80,9 +80,7 @@ class DualPointNet(nn.Module):
         self.relu = nn.ReLU()
 
     def forward(self, ab):
-        print(ab.shape)
         ab = torch.chunk(ab, 2, dim=2) # Split between proteins (see dataset where original concatenation happens)
-        print(ab[0].shape)
         a = self.feat(ab[0])
         b = self.feat(ab[1])
         x = torch.cat((a,b), dim=1) # Concatenate both global features before passing to fully connected network
