@@ -47,7 +47,9 @@ class DualPDBset(data.Dataset):
         pcA = samplePoints(pcA, self.num_points)
         pcB = samplePoints(pcB, self.num_points)
 
-        return torch.from_numpy(pcA), torch.from_numpy(pcB), np.float32(mtrc)
+        pc = np.concatenate((pcA, pcB),0) # Concatenate to conform with pytorch API (module takes one input)
+
+        return torch.from_numpy(pc), np.float32(mtrc)
 
 
 # Duplicate points within pointcloud don't matter in PointNet architecture due to maxpooling
