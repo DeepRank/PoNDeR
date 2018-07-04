@@ -117,14 +117,22 @@ for epoch in range(arg.num_epoch):
     scheduler.step(epoch=0)
 
     for i, data in enumerate(dataloader, 0):
-        points, target = data
-        points, target = Variable(points), Variable(target)  # Deprecated in PyTorch >=0.4
-        points = points.transpose(2, 1)
-        if arg.CUDA:
-            points, target = points.cuda(), target.cuda()
-
         optimizer.zero_grad()
-        prediction = model(points).view(-1)
+        if arg.dual:
+            pointsA, pointsB, target = data
+            pointsA, pointsB, target = Variable(pointsA), Variable(pointsB), Variable(target)  # Deprecated in PyTorch >=0.4
+            pointsA, pointsB = pointsA.transpose(2,1), pointsB.transpose(2,1)
+            if arg.CUDA:
+                pointsA, pointsB, target = pointsA.cuda(), pointsB.cuda(), target.cuda()
+            prediction = model(pointsA, pointsB).view(-1)
+        else:
+            points, target = data
+            points, target = Variable(points), Variable(target)  # Deprecated in PyTorch >=0.4
+            points = points.transpose(2, 1)
+            if arg.CUDA:
+                points, target = points.cuda(), target.cuda()
+            prediction = model(points).view(-1)
+        
         loss = train_loss_func(prediction, target)
         loss.backward()
         print('    e%d - %d/%d - LR: %f - Loss: %.5f' %(epoch, i, num_batch, get_lr(optimizer)[0], loss), flush=True)
