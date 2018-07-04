@@ -13,12 +13,17 @@ from torch.autograd import Variable
 
 import matplotlib.pyplot as plt
 import matplotlib.axes as axs
+import matplotlib as mpl
 import numpy as np
 
 from PPIPointNet import PointNet
 from evaluate import evaluateModel
 from dataset import PDBset
 from utils import get_lr, saveModel, FavorLowLoss
+
+if os.environ.get('DISPLAY','') == '':
+    print('no display found. Using non-interactive Agg backend')
+    mpl.use('Agg')
 
 # PRINT INFORMATION
 
@@ -37,9 +42,8 @@ print('LIBRARY VERSIONS')
 print('    Python    -', platform.python_version(), 'on', platform.python_compiler())
 print('    Pytorch   -', torch.__version__)
 print('    CUDA      -', torch.version.cuda)
-print('    CUDNN     -', torch.backends.cudnn.version(), '\n')
+print('    CUDNN     -', torch.backends.cudnn.version(), '\n', flush = True)
 
-sys.stdout.flush()
 # ---- OPTION PARSING ----
 
 parser = argparse.ArgumentParser()
@@ -57,7 +61,7 @@ parser.add_argument('--avg_pool', dest='avg_pool', default=False, action='store_
 
 arg = parser.parse_args()
 print('RUN PARAMETERS')
-print('    ', arg, '\n')
+print('    ', arg, '\n', flush=True)
 
 # ---- DATA LOADING ----
 
@@ -70,7 +74,7 @@ testloader = data.DataLoader(testset, batch_size=arg.batch_size, shuffle=True, n
 num_batch = len(dataset)/arg.batch_size
 
 print('DATA PARAMETERS')
-print('    Test & train sizes: %d & %d -> %.1f' %(len(testset), len(dataset), 100*len(testset)/len(dataset)), '%')
+print('    Test & train sizes: %d & %d -> %.1f' %(len(testset), len(dataset), 100*len(testset)/len(dataset)), '%', flush=True)
 
 # ---- SET UP MODEL ----
 
