@@ -103,7 +103,7 @@ test_loss_func =nn.L1Loss(size_average=False)
 # ---- INITIAL TEST SET EVALUATION ----
 
 print('START EVALUATION OF RANDOM WEIGHTS')
-pretrain_test_score, _, _ = evaluateModel(model, test_loss_func, testloader)
+pretrain_test_score, _, _ = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA)
 print('    Pre-train test score = %.5f' %(pretrain_test_score))
 
 # ---- MODEL TRAINING ----
@@ -151,12 +151,12 @@ print('    Model saved')
 
 print('START EVALUATION')
 
-posttrain_test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader)
+posttrain_test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA)
 
 print('    Post-train test score =', posttrain_test_score)
 print('    Improvement:', 100*(pretrain_test_score-posttrain_test_score)/pretrain_test_score, '%')
 
-posttrain_train_score,x2,y2 = evaluateModel(model, test_loss_func, dataloader)
+posttrain_train_score,x2,y2 = evaluateModel(model, test_loss_func, dataloader, arg.dual, arg.CUDA)
 
 plt.scatter(x2,y2, label='Train',s=3)
 plt.scatter(x1,y1, label='Test',s=3)
