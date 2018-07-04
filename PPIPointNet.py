@@ -34,7 +34,7 @@ class PointNetFeat(nn.Module):
 # Feature to value mapping
 
 class PointNet(nn.Module):
-    def __init__(self, in_channels, num_points=250, avgPool=False):
+    def __init__(self, in_channels, num_points=250, avgPool=False, sigmoid=False):
         super(PointNet, self).__init__()
 
         self.num_points = num_points
@@ -55,12 +55,15 @@ class PointNet(nn.Module):
         x = F.relu(self.bn1(self.lin1(x)))
         x = F.relu(self.do1(self.lin2(x)))
         x = self.lin3(x)
-        return x
+         if self.sigmoid:
+            return nn.Sigmoid(x)
+        else:
+            return x
 
 class DualPointNet(nn.Module):
-    def __init__(self, in_channels, num_points=250, avgPool=False):
+    def __init__(self, in_channels, num_points=250, avgPool=False, sigmoid=False):
         super(DualPointNet, self).__init__()
-
+        self.sigmoid = sigmoid
         self.num_points = num_points
         self.in_channels = in_channels
         self.feat = PointNetFeat(in_channels, num_points, avgPool)
@@ -81,4 +84,7 @@ class DualPointNet(nn.Module):
         x = F.relu(self.bn1(self.lin1(x)))
         x = F.relu(self.do1(self.lin2(x)))
         x = self.lin3(x)
-        return x
+        if self.sigmoid:
+            return nn.Sigmoid(x)
+        else:
+            return x
