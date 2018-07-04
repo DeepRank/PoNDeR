@@ -56,3 +56,29 @@ class PointNet(nn.Module):
         x = F.relu(self.do1(self.lin2(x)))
         x = self.lin3(x)
         return x
+
+class DualPointNet(nn.Module):
+    def __init__(self, in_channels, num_points=250, avgPool=False):
+        super(DualPointNet, self).__init__()
+
+        self.num_points = num_points
+        self.in_channels = in_channels
+        self.feat = PointNetFeat(in_channels, num_points, avgPool)
+
+        self.lin1 = nn.Linear(2048, 512)
+        self.lin2 = nn.Linear(512, 256)
+        self.lin3 = nn.Linear(256, 1)
+
+        self.bn1 = nn.BatchNorm1d(512)
+        self.do1 = nn.Dropout(0.3)  # or batchnorm1d(256) ?
+
+        self.relu = nn.ReLU()
+
+    def forward(self, a, b):
+        a = self.feat(a)
+        b = self.feat(b)
+        x = torch.cat() # Concatenate both global features before passing to fully connected network
+        x = F.relu(self.bn1(self.lin1(x)))
+        x = F.relu(self.do1(self.lin2(x)))
+        x = self.lin3(x)
+        return x
