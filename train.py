@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 import matplotlib.axes as axs
 import numpy as np
 
-from PPIPointNet import PointNet
+from PPIPointNet import PointNet, DualPointNet
 from evaluate import evaluateModel
 from dataset import PDBset
 from utils import get_lr, saveModel, FavorLowLoss
@@ -57,6 +57,7 @@ parser.add_argument('--model',      type=str, default='',   help='Model input pa
 parser.add_argument('--data_path', type=str, default='/home/lukas/DR_DATA/pointclouds/')
 parser.add_argument('--lr', type=float, default=0.01, help='Learning rate')
 parser.add_argument('--avg_pool', dest='avg_pool', default=False, action='store_true', help='Use average pooling after for feature pooling (instead of max pooling)')
+parser.add_argument('--dual', dest='dual', default=False, action='store_true', help='Use DualPointNet architecture')
 
 arg = parser.parse_args()
 print('RUN PARAMETERS')
@@ -78,9 +79,14 @@ print('    Test & train sizes: %d & %d -> %.1f' %(len(testset), len(dataset), 10
 # ---- SET UP MODEL ----
 
 print('MODEL PARAMETERS')
-model = PointNet(num_points=arg.num_points, in_channels=12, avgPool=arg.avg_pool)
+if arg.dual:
+    model = PointNet(num_points=arg.num_points, in_channels=6, avgPool=arg.avg_pool, sigmoid = True)
+else:
+    model = DualPointNet(num_points=arg.num_points, in_channels=6, avgPool=arg.avg_pool, sigmoid = True)
+
 if arg.model != '':
     model.load_state_dict(torch.load(arg.model))
+
 if arg.CUDA:
     model.cuda()
 print(model)
