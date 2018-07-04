@@ -14,6 +14,8 @@ from deeprank.tools import StructureSimilarity
 parser = argparse.ArgumentParser()
 parser.add_argument('--root_dir', type=str, default='/home/lukas/DR_DATA/', help='Path to data')
 parser.add_argument('--decoy_dir', type=str, default='decoys/', help='Relative path to decoys')
+parser.add_argument('--decoy_subdir', type=str, default='', help='Subfolder within specific decoy folder (e.g. water/)')
+parser.add_argument('--native_dir', type=str, default='natives/', help='Relative path to natives')
 parser.add_argument('--dual', dest='dual', default=False, action='store_true',help='Store pointclouds of different proteins separately')
 arg = parser.parse_args()
 
@@ -47,8 +49,8 @@ def getGroup(native_name):
     return group
 
 # Start converting
-for native_name in sorted(os.listdir(arg.root_dir+'natives/')):
-    decoy_dir = arg.root_dir+arg.decoy_dir+native_name[:4]
+for native_name in sorted(os.listdir(arg.root_dir+arg.native_dir)):
+    decoy_dir = arg.root_dir+arg.decoy_dir+native_name[:4]+arg.decoy_subdir
     if os.path.isdir(decoy_dir):
         group = getGroup(native_name)
         print('Putting', native_name[:4], 'in', group.name)
@@ -83,7 +85,7 @@ for native_name in sorted(os.listdir(arg.root_dir+'natives/')):
                     pc = np.r_[pcA, pcB].astype(np.float32)
 
                 # Get metrics
-                sim = StructureSimilarity(decoy_dir+'/'+decoy_name, arg.root_dir+'natives/'+native_name)
+                sim = StructureSimilarity(decoy_dir+'/'+decoy_name, arg.root_dir+arg.native_dir+native_name)
                 irmsd = sim.compute_irmsd_fast(method='svd')
                 lrmsd = sim.compute_lrmsd_fast(method='svd')
                 fnat = sim.compute_Fnat_fast()
