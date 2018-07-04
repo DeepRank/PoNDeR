@@ -57,7 +57,7 @@ class PointNet(nn.Module):
         x = F.relu(self.do1(self.lin2(x)))
         x = self.lin3(x)
         if self.sigmoid:
-            return nn.Sigmoid(x)
+            return F.sigmoid(x)
         else:
             return x
 
@@ -90,6 +90,6 @@ class DualPointNet(nn.Module):
         x = F.relu(self.do1(self.lin2(x)))
         x = self.lin3(x)
         if self.sigmoid:
-            return nn.Sigmoid(x)
+            return F.sigmoid(x)
         else:
             return x
