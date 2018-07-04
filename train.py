@@ -11,19 +11,18 @@ import torch.optim as optim
 import torch.utils.data as data
 from torch.autograd import Variable
 
+import matplotlib
+if os.environ.get('DISPLAY','') == '':
+    print('No display found. Using non-interactive Agg backend')
+    matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.axes as axs
-import matplotlib as mpl
 import numpy as np
 
 from PPIPointNet import PointNet
 from evaluate import evaluateModel
 from dataset import PDBset
 from utils import get_lr, saveModel, FavorLowLoss
-
-if os.environ.get('DISPLAY','') == '':
-    print('no display found. Using non-interactive Agg backend')
-    mpl.use('Agg')
 
 # PRINT INFORMATION
 
