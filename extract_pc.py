@@ -12,7 +12,8 @@ from deeprank.tools import StructureSimilarity
 
 # Parser
 parser = argparse.ArgumentParser()
-parser.add_argument('--root_dir', type=str, default='/home/lukas/DR_DATA/', help='Absolute path to data')
+parser.add_argument('--root_dir', type=str, default='/home/lukas/DR_DATA/', help='Path to data')
+parser.add_argument('--decoy_dir', type=str, default='decoys/', help='Relative path to decoys')
 parser.add_argument('--dual', dest='dual', default=False, action='store_true',help='Store pointclouds of different proteins separately')
 arg = parser.parse_args()
 
@@ -47,7 +48,7 @@ def getGroup(native_name):
 
 # Start converting
 for native_name in sorted(os.listdir(arg.root_dir+'natives/')):
-    decoy_dir = arg.root_dir+'decoys/'+native_name[:4]
+    decoy_dir = arg.root_dir+arg.decoy_dir+native_name[:4]
     if os.path.isdir(decoy_dir):
         group = getGroup(native_name)
         print('Putting', native_name[:4], 'in', group.name)
