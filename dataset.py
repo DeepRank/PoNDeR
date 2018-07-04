@@ -1,6 +1,5 @@
 import torch
 import torch.utils.data as data
-import pickle
 import os
 import random
 import numpy as np
