@@ -104,4 +104,5 @@ for native_name in sorted(os.listdir(arg.root_dir+'natives/')):
                     ds.attrs['fnat']  = fnat
                     ds.attrs['dockQ'] = dockQ
                 print('    ',decoy_name[:-4], 'done')
+            break # for testing
 hf.close()
