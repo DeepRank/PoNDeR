@@ -9,7 +9,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import torch.utils.data as data
-import torchvision.transforms as transforms
 from torch.autograd import Variable
 
 import matplotlib.pyplot as plt
