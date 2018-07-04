@@ -47,11 +47,7 @@ class DualPDBset(data.Dataset):
         pcA = samplePoints(pcA, self.num_points)
         pcB = samplePoints(pcB, self.num_points)
 
-        print(pcA.shape, '-', pcB.shape)
-
         pc = np.concatenate((pcA, pcB),0) # Concatenate to conform with pytorch API (module takes one input)
-
-        print(pc.shape)
 
         return torch.from_numpy(pc), np.float32(mtrc)
 
