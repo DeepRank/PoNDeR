@@ -81,7 +81,7 @@ class DualPointNet(nn.Module):
 
     def forward(self, ab):
         print(ab.shape)
-        ab = torch.split(ab, self.num_points, dim=0) # Split between proteins (see dataset where original concatenation happens)
+        ab = torch.chunk(ab, 2, dim=0) # Split between proteins (see dataset where original concatenation happens)
         print(ab)
         print(ab[0].shape)
         a = self.feat(ab[0])
