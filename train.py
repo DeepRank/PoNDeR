@@ -100,7 +100,6 @@ if arg.model != '':
 
 if arg.CUDA:
     model.cuda()
-    model = nn.DataParallel(model)
 print(model)
 print('')
 
