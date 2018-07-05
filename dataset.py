@@ -47,21 +47,17 @@ class DualPDBset(data.Dataset):
         pcA = samplePoints(pcA, self.num_points)
         pcB = samplePoints(pcB, self.num_points)
 
-        pc = np.concatenate((pcA, pcB),0) # Concatenate to conform with pytorch API (module takes one input)
+        pc = np.concatenate((pcA, pcB), axis=0) # Concatenate to conform with pytorch API (nn.module takes only one input)
 
         return torch.from_numpy(pc), np.float32(mtrc)
 
 
-# Duplicate points within pointcloud don't matter in PointNet architecture due to maxpooling
-# This does NOT apply to avgpooling!
+# Zero concatenation, safe for both maxpooling and avgpooling
 def samplePoints(pc, num_points):
     if len(pc) < num_points:
-        point_ids = random.sample(range(len(pc)), len(pc))
-        while len(point_ids)<num_points-len(pc):
-            point_ids += random.sample(range(len(pc)), len(pc))
-        point_ids += random.sample(range(len(pc)), num_points-len(point_ids))
+        zeros = np.zeros((num_points-len(pc), pc.shape[1]),dtype=np.float32)
+        pc = np.concatenate((pc, zeros), axis=0)
     else:
         point_ids = random.sample(range(len(pc)), num_points)
-
-    pc = np.take(pc, point_ids, axis=0)
+        pc = np.take(pc, point_ids, axis=0)
     return pc
