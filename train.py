@@ -92,6 +92,7 @@ if arg.model != '':
 
 if arg.CUDA:
     model.cuda()
+    model = nn.DataParallel(model)
 print(model)
 
 optimizer = optim.SGD(model.parameters(), lr=arg.lr, momentum=0.9)
