@@ -58,6 +58,7 @@ parser.add_argument('--lr', type=float, default=0.01, help='Learning rate')
 parser.add_argument('--avg_pool', dest='avg_pool', default=False, action='store_true', help='Use average pooling after for feature pooling (instead of max pooling)')
 parser.add_argument('--dual', dest='dual', default=False, action='store_true', help='Use DualPointNet architecture')
 parser.add_argument('--get_min', dest='get_min', default=False, action='store_true', help='Get minimum point cloud size')
+parser.add_argument('--sigmoid', dest='sigmoid', default=False, action='store_true', help='Use sigmoid on final output')
 
 arg = parser.parse_args()
 print('RUN PARAMETERS')
@@ -91,9 +92,9 @@ print('')
 
 print('MODEL PARAMETERS')
 if arg.dual:
-    model = DualPointNet(num_points=arg.num_points, in_channels=6, avgPool=arg.avg_pool, sigmoid = True)
+    model = DualPointNet(num_points=arg.num_points, in_channels=6, avgPool=arg.avg_pool, sigmoid = arg.sigmoid)
 else:
-    model = PointNet(num_points=arg.num_points, in_channels=6, avgPool=arg.avg_pool, sigmoid = True)
+    model = PointNet(num_points=arg.num_points, in_channels=6, avgPool=arg.avg_pool, sigmoid = arg.sigmoid)
 
 if arg.model != '':
     model.load_state_dict(torch.load(arg.model))
