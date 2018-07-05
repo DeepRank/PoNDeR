@@ -96,7 +96,7 @@ if arg.CUDA:
 print(model)
 
 optimizer = optim.SGD(model.parameters(), lr=arg.lr, momentum=0.9)
-scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, num_batch+1)
+scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, num_batch)
 train_loss_func = nn.L1Loss()
 test_loss_func = nn.L1Loss(size_average=False)
 
@@ -120,13 +120,15 @@ for epoch in range(arg.num_epoch):
         optimizer.zero_grad()
         points, target = data
         points, target = Variable(points), Variable(target)  # Deprecated in PyTorch >=0.4
+        if len(target) != arg.batch_size:
+            break
         points = points.transpose(2, 1)
         if arg.CUDA:
             points, target = points.cuda(), target.cuda()
         prediction = model(points).view(-1)
         loss = train_loss_func(prediction, target)
         loss.backward()
-        print('    e%d - %d/%d - LR: %f - Loss: %.5f' %(epoch, i, num_batch, get_lr(optimizer)[0], loss), flush=True)
+        print('    E: %02d - %02d/%02d - LR: %.4f - Loss: %.4f' %(epoch+1, i+1, num_batch, get_lr(optimizer)[0], loss), flush=True)
         optimizer.step()
         if arg.cosine_decay:
             scheduler.step()
@@ -149,10 +151,11 @@ print('    Improvement:', 100*(pretrain_test_score-posttrain_test_score)/pretrai
 
 posttrain_train_score,x2,y2 = evaluateModel(model, test_loss_func, dataloader, arg.dual, arg.CUDA)
 
-plt.scatter(x2,y2, label='Train',s=3)
-plt.scatter(x1,y1, label='Test',s=3)
-
-plt.axis('equal')
+plt.scatter(x2,y2, label='Train',s=2)
+plt.scatter(x1,y1, label='Test',s=2)
+plt.xlim(0,1)
+plt.ylim(0,1)
+plt.title('Siamese Pointnet')
 plt.xlabel('Truth')
 plt.ylabel('Prediction')
 plt.legend(loc=4)
