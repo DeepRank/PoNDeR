@@ -85,6 +85,7 @@ print('    Test & train sizes: %d & %d -> %.1f' %(len(testset), len(dataset), 10
 if arg.get_min:
     minSize = min(dataset.getMin(), testset.getMin())
     print('    Minimum pointcloud size:', minSize)
+print('')
 
 # ---- SET UP MODEL ----
 
@@ -101,17 +102,18 @@ if arg.CUDA:
     model.cuda()
     model = nn.DataParallel(model)
 print(model)
+print('')
 
 optimizer = optim.SGD(model.parameters(), lr=arg.lr, momentum=0.9)
 scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, num_batch)
-train_loss_func = nn.SmoothL1Loss()
-test_loss_func = nn.SmoothL1Loss(size_average=False)
+train_loss_func = nn.MSELoss()
+test_loss_func = nn.MSELoss(size_average=False)
 
 # ---- INITIAL TEST SET EVALUATION ----
 
 print('START EVALUATION OF RANDOM WEIGHTS')
 pretrain_test_score, _, _ = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA)
-print('    Pre-train test score = %.5f' %(pretrain_test_score))
+print('    Pre-train test score = %.5f\n' %(pretrain_test_score))
 
 # ---- MODEL TRAINING ----
 
@@ -135,7 +137,7 @@ for epoch in range(arg.num_epoch):
         prediction = model(points).view(-1)
         loss = train_loss_func(prediction, target)
         loss.backward()
-        print('    E: %02d - %02d/%02d - LR: %.4f - Loss: %.4f' %(epoch+1, i+1, num_batch, get_lr(optimizer)[0], loss), flush=True)
+        print('    E: %02d - %02d/%02d - LR: %.4f - Loss: %.5f' %(epoch+1, i+1, num_batch, get_lr(optimizer)[0], loss), flush=True)
         optimizer.step()
         if arg.cosine_decay:
             scheduler.step()
@@ -145,7 +147,7 @@ for epoch in range(arg.num_epoch):
 
 print('SAVING MODEL')
 saveModel(model,arg)
-print('    Model saved')
+print('    Model saved\n')
 
 # ---- FINAL TEST SET EVALUATION ----
 
@@ -153,15 +155,15 @@ print('START EVALUATION')
 
 posttrain_test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA)
 
-print('    Post-train test score =', posttrain_test_score)
-print('    Improvement:', 100*(pretrain_test_score-posttrain_test_score)/pretrain_test_score, '%')
+print('    Post-train test score = %.5f' %(pretrain_test_score))
+print('    Improvement: %.1f %%\n' %(100*(pretrain_test_score-posttrain_test_score)/pretrain_test_score))
 
 posttrain_train_score,x2,y2 = evaluateModel(model, test_loss_func, dataloader, arg.dual, arg.CUDA)
 
-plt.scatter(x2,y2, label='Train',s=2)
-plt.scatter(x1,y1, label='Test',s=2)
-plt.xlim(xmin=0)
-plt.ylim(ymin=0)
+plt.scatter(x2,y2, label='Train',s=1)
+plt.scatter(x1,y1, label='Test',s=1)
+plt.xlim(0,1)
+plt.ylim(0,1)
 plt.title('Siamese Pointnet')
 plt.xlabel('Truth')
 plt.ylabel('Prediction')
