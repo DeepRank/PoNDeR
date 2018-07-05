@@ -105,8 +105,8 @@ print('')
 
 optimizer = optim.SGD(model.parameters(), lr=arg.lr, momentum=0.9)
 scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, num_batch)
-train_loss_func = nn.MSELoss()
-test_loss_func = nn.MSELoss(size_average=False)
+train_loss_func = nn.L1Loss()
+test_loss_func = nn.L1Loss(size_average=False)
 
 # ---- INITIAL TEST SET EVALUATION ----
 
