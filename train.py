@@ -57,6 +57,7 @@ parser.add_argument('--data_path', type=str, default='/home/lukas/DR_DATA/pointc
 parser.add_argument('--lr', type=float, default=0.01, help='Learning rate')
 parser.add_argument('--avg_pool', dest='avg_pool', default=False, action='store_true', help='Use average pooling after for feature pooling (instead of max pooling)')
 parser.add_argument('--dual', dest='dual', default=False, action='store_true', help='Use DualPointNet architecture')
+parser.add_argument('--get_min', dest='get_min', default=False, action='store_true', help='Get minimum point cloud size')
 
 arg = parser.parse_args()
 print('RUN PARAMETERS')
@@ -78,6 +79,12 @@ num_batch = len(dataset)/arg.batch_size
 
 print('DATA PARAMETERS')
 print('    Test & train sizes: %d & %d -> %.1f' %(len(testset), len(dataset), 100*len(testset)/len(dataset)), '%', flush=True)
+
+# ---- GET MINIMUM
+
+if arg.get_min:
+    minSize = min(dataset.getMin(), testset.getMin())
+    print('    Minimum pointcloud size:', minSize)
 
 # ---- SET UP MODEL ----
 

@@ -50,9 +50,18 @@ class DualPDBset(data.Dataset):
         pc = np.concatenate((pcA, pcB), axis=0) # Concatenate to conform with pytorch API (nn.module takes only one input)
 
         return torch.from_numpy(pc), np.float32(mtrc)
+    
+    def getMin(self):
+        minSize = 100000000 # Hacky but works
+        for key in self.keys:
+            subgroup = self.group.get(key)
+            pcA = np.array(subgroup.get('A'))
+            pcB = np.array(subgroup.get('B'))
+            if min(len(pcA), len(pcB)):
+                minSize = min(len(pcA), len(pcB))
+        return minSize
 
-
-# Zero concatenation, safe for both maxpooling and avgpooling
+# Zero concatenation, safe for maxpooling but not for avgpooling
 def samplePoints(pc, num_points):
     if len(pc) < num_points:
         zeros = np.zeros((num_points-len(pc), pc.shape[1]),dtype=np.float32)
