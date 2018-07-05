@@ -13,7 +13,6 @@ from torch.autograd import Variable
 
 import matplotlib
 if os.environ.get('DISPLAY','') == '':
-    print('No display found. Using non-interactive Agg backend')
     matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.axes as axs
@@ -22,7 +21,7 @@ import numpy as np
 from PPIPointNet import PointNet, DualPointNet
 from evaluate import evaluateModel
 from dataset import PDBset, DualPDBset
-from utils import get_lr, saveModel, FavorLowLoss
+from utils import get_lr, saveModel, FavorHighLoss
 
 # PRINT INFORMATION
 
@@ -97,8 +96,8 @@ print(model)
 
 optimizer = optim.SGD(model.parameters(), lr=arg.lr, momentum=0.9)
 scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, num_batch)
-train_loss_func = nn.L1Loss()
-test_loss_func = nn.L1Loss(size_average=False)
+train_loss_func = nn.SmoothL1Loss()
+test_loss_func = nn.SmoothL1Loss(size_average=False)
 
 # ---- INITIAL TEST SET EVALUATION ----
 
@@ -153,8 +152,8 @@ posttrain_train_score,x2,y2 = evaluateModel(model, test_loss_func, dataloader, a
 
 plt.scatter(x2,y2, label='Train',s=2)
 plt.scatter(x1,y1, label='Test',s=2)
-plt.xlim(0,1)
-plt.ylim(0,1)
+plt.xlim(xmin=0)
+plt.ylim(ymin=0)
 plt.title('Siamese Pointnet')
 plt.xlabel('Truth')
 plt.ylabel('Prediction')
