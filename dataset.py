@@ -23,7 +23,7 @@ class PDBset(data.Dataset):
         pcA = np.array(subgroup.get('A'))
         pcB = np.array(subgroup.get('B'))
         mtrc = subgroup.attrs[self.metric]
-        print(mtrc)
+        print(self.metric, subgroup.attrs['dockQ'], subgroup.attrs['irmsd'], subgroup.attrs['lrmsd'], subgroup.attrs['fnat'])
 
         pcA = np.c_[pcA, np.zeros_like(pcA)]
         pcB = np.c_[np.zeros_like(pcB), pcB]
