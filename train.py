@@ -142,7 +142,7 @@ for epoch in range(arg.num_epoch):
         prediction = model(points).view(-1)
         loss = train_loss_func(prediction, target)
         loss.backward()
-        print('    E: %02d - %02d/%02d - LR: %.5f - Loss: %.5f' %(epoch+1, i+1, num_batch, get_lr(optimizer)[0], loss), flush=True)
+        print('    E: %02d - %02d/%02d - LR: %.6f - Loss: %.5f' %(epoch+1, i+1, num_batch, get_lr(optimizer)[0], loss), flush=True)
         optimizer.step()
         if arg.cosine_decay:
             scheduler.step()
