@@ -58,7 +58,7 @@ class PointNet(nn.Module):
         x = self.feat(x)
         x = F.relu(self.bn1(self.lin1(x)))
         x = F.relu(self.do1(self.lin2(x)))
-        x = self.lin3(x)
+        x = F.relu(self.lin3(x))
         if self.sigmoid:
             return F.sigmoid(x)
         else:
