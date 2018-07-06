@@ -19,9 +19,9 @@ class PointNetFeat(nn.Module):
         self.bn3 = nn.BatchNorm1d(1024)
 
         if avgPool:
-            self.pl = torch.nn.AvgPool1d(num_points)
+            self.pl = torch.nn.AvgPool1d(self.num_points)
         else:
-            self.pl = torch.nn.MaxPool1d(num_points)
+            self.pl = torch.nn.MaxPool1d(self.num_points)
 
     def forward(self, x):
         x = F.relu(self.bn1(self.conv1(x)))
