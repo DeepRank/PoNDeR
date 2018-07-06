@@ -93,19 +93,16 @@ print('')
 
 # ---- SET UP MODEL ----
 
-print('MODEL PARAMETERS')
 if arg.dual:
-    model = DualPointNet(num_points=arg.num_points, in_channels=6, avgPool=arg.avg_pool, sigmoid = arg.sigmoid)
+    model = DualPointNet(num_points=arg.num_points, in_channels=6, avgPool=arg.avg_pool, sigmoid = arg.sigmoid, dropout=arg.dropout)
 else:
-    model = PointNet(num_points=arg.num_points, in_channels=6, avgPool=arg.avg_pool, sigmoid = arg.sigmoid)
+    model = PointNet(num_points=arg.num_points, in_channels=6, avgPool=arg.avg_pool, sigmoid = arg.sigmoid, dropout=arg.dropout)
 
 if arg.model != '':
     model.load_state_dict(torch.load(arg.model))
 
 if arg.CUDA:
     model.cuda()
-print(model)
-print('')
 
 optimizer = optim.SGD(model.parameters(), lr=arg.lr, momentum=0.9)
 scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, num_batch)
