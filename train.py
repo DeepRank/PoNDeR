@@ -59,7 +59,9 @@ parser.add_argument('--avg_pool',   dest='avg_pool', default=False, action='stor
 parser.add_argument('--dual',       dest='dual', default=False, action='store_true', help='Use DualPointNet architecture')
 parser.add_argument('--get_min',    dest='get_min', default=False, action='store_true', help='Get minimum point cloud size')
 parser.add_argument('--sigmoid',    dest='sigmoid', default=False, action='store_true', help='Use sigmoid on final output')
-parser.add_argument('--metric',      type=str, default='dockQ',   help='Metric to be used. Options: irmsd, lrmsd, fnat, dockQ')
+parser.add_argument('--metric',     type=str, default='dockQ',   help='Metric to be used. Options: irmsd, lrmsd, fnat, dockQ')
+parser.add_argument('--dropout',    type=float, default=0.3, help='Dropout rate in last layer. When 0 replaced by batchnorm')
+
 
 arg = parser.parse_args()
 print('RUN PARAMETERS')
@@ -110,12 +112,6 @@ scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, num_batch)
 train_loss_func = FavorHighLoss()
 test_loss_func = FavorHighLoss(size_average=False)
 
-# ---- INITIAL TEST SET EVALUATION ----
-
-print('START EVALUATION OF RANDOM WEIGHTS')
-pretrain_test_score, _, _ = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA)
-print('    Pre-train test score = %.5f\n' %(pretrain_test_score))
-
 # ---- MODEL TRAINING ----
 
 print('START TRAINING')
@@ -157,8 +153,7 @@ print('START EVALUATION')
 posttrain_test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA)
 
 print('    Post-train test score = %.5f' %(posttrain_test_score))
-print('    Improvement: %.1f %%\n' %(100*(pretrain_test_score-posttrain_test_score)/pretrain_test_score))
-
+print('    Creating plot...')
 posttrain_train_score,x2,y2 = evaluateModel(model, test_loss_func, dataloader, arg.dual, arg.CUDA)
 
 plt.scatter(x2,y2, label='Train',s=1)
