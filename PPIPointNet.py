@@ -34,7 +34,7 @@ class PointNetFeat(nn.Module):
 # Feature to value mapping
 
 class PointNet(nn.Module):
-    def __init__(self, in_channels, num_points=250, avgPool=False, sigmoid=False):
+    def __init__(self, in_channels, num_points=250, avgPool=False, sigmoid=False, dropout=0.3):
         super(PointNet, self).__init__()
 
         self.sigmoid = sigmoid
@@ -47,7 +47,10 @@ class PointNet(nn.Module):
         self.lin3 = nn.Linear(256, 1)
 
         self.bn1 = nn.BatchNorm1d(512)
-        self.do1 = nn.Dropout(0.3)  # or batchnorm1d(256) ?
+        if dropout == 0:
+            self.do1 = nn.BatchNorm1d(256)
+        else:
+            self.do1 = nn.Dropout(dropout)
 
         self.relu = nn.ReLU()
 
@@ -62,7 +65,7 @@ class PointNet(nn.Module):
             return x
 
 class DualPointNet(nn.Module):
-    def __init__(self, in_channels, num_points=250, avgPool=False, sigmoid=False):
+    def __init__(self, in_channels, num_points=250, avgPool=False, sigmoid=False, dropout=0.3):
         super(DualPointNet, self).__init__()
 
         self.sigmoid = sigmoid
@@ -75,7 +78,10 @@ class DualPointNet(nn.Module):
         self.lin3 = nn.Linear(256, 1)
 
         self.bn1 = nn.BatchNorm1d(512)
-        self.do1 = nn.Dropout(0.3)  # or batchnorm1d(256) ?
+        if dropout == 0:
+            self.do1 = nn.BatchNorm1d(256)
+        else:
+            self.do1 = nn.Dropout(dropout)
 
         self.relu = nn.ReLU()
 
