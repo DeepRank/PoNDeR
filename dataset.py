@@ -23,6 +23,7 @@ class PDBset(data.Dataset):
         pcA = np.array(subgroup.get('A'))
         pcB = np.array(subgroup.get('B'))
         mtrc = subgroup.attrs[self.metric]
+        print(mtrc)
 
         pcA = np.c_[pcA, np.zeros_like(pcA)]
         pcB = np.c_[np.zeros_like(pcB), pcB]
@@ -48,7 +49,6 @@ class DualPDBset(data.Dataset):
         pcA = np.array(subgroup.get('A'))
         pcB = np.array(subgroup.get('B'))
         mtrc = subgroup.attrs[self.metric]
-        print(mtrc)
 
         pcA = samplePoints(pcA, self.num_points)
         pcB = samplePoints(pcB, self.num_points)
