@@ -53,8 +53,9 @@ parser.add_argument('--cosine_decay',dest='cosine_decay', default=False, action=
 parser.add_argument('--CUDA',       dest='CUDA', default=False, action='store_true', help='Train on GPU')
 parser.add_argument('--out_folder', type=str, default='/artifacts',  help='Model output folder')
 parser.add_argument('--model',      type=str, default='',   help='Model input path')
-parser.add_argument('--data_path',  type=str, default='/home/lukas/DR_DATA/pointclouds/')
-parser.add_argument('--lr',         type=float, default=0.01, help='Learning rate (default = 0.01)')
+parser.add_argument('--data_path',  type=str, default='/home/lukas/PoNDeR/dualPointclouds.h5')
+parser.add_argument('--lr',         type=float, default=0.001, help='Learning rate (default = 0.001)')
+parser.add_argument('--optimizer',  type=str, default='Adam', help='What optimizer to use. Options: Adam, SGD')
 parser.add_argument('--avg_pool',   dest='avg_pool', default=False, action='store_true', help='Use average pooling after for feature pooling (instead of default max pooling)')
 parser.add_argument('--dual',       dest='dual', default=False, action='store_true', help='Use DualPointNet architecture')
 parser.add_argument('--get_min',    dest='get_min', default=False, action='store_true', help='Get minimum point cloud size')
@@ -104,10 +105,19 @@ if arg.model != '':
 if arg.CUDA:
     model.cuda()
 
-optimizer = optim.SGD(model.parameters(), lr=arg.lr, momentum=0.9)
+if arg.optimizer == 'Adam':
+    optimizer = optim.Adam(model.parameters(), lr=arg.lr)
+    schedFlag = False
+    if arg.cosine_decay:
+        raise Exception('Cosine decay is not compatible with Adam optimizer!')
+elif arg.optimizer == 'SGD':
+    optimizer = optim.SGD(model.parameters(), lr=arg.lr, momentum=0.9)
+    schedFlag = True
+
 scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, num_batch)
-train_loss_func = FavorHighLoss()
-test_loss_func = FavorHighLoss(size_average=False)
+
+train_loss_func = nn.MSELoss()
+test_loss_func = nn.MSELoss(size_average=False)
 
 # ---- MODEL TRAINING ----
 
@@ -116,8 +126,9 @@ model.train()  # Set to training mode
 
 for epoch in range(arg.num_epoch):
 
-    scheduler.base_lrs = [arg.lr*(1-(epoch**2)/(arg.num_epoch**2))]
-    scheduler.step(epoch=0)
+    if schedFlag:
+        scheduler.base_lrs = [arg.lr*(1-(epoch**2)/(arg.num_epoch**2))]
+        scheduler.step(epoch=0)
 
     for i, data in enumerate(dataloader, 0):
         optimizer.zero_grad()
