@@ -19,11 +19,17 @@ class PDBset(data.Dataset):
         return len(self.keys)
 
     def __getitem__(self, idx):
-        ds = self.group.get(self.keys[idx])
-        pc = np.array(ds)
-        mtrc = ds.attrs[self.metric]
+        subgroup = self.group.get(self.keys[idx])
+        pcA = np.array(subgroup.get('A'))
+        pcB = np.array(subgroup.get('B'))
+        mtrc = subgroup.attrs[self.metric]
 
-        pc = samplePoints(pc, self.num_points)
+        pcA = samplePoints(pcA, self.num_points)
+        pcB = samplePoints(pcB, self.num_points)
+
+        pcA = np.c_[pcA, np.zeros_like(pcA)]
+        pcB = np.c_[np.zeros_like(pcB), pcB]
+        pc = np.r_[pcA, pcB].astype(np.float32)
 
         return torch.from_numpy(pc), np.float32(mtrc)
 
