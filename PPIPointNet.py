@@ -8,7 +8,7 @@ class PointNetFeat(nn.Module):
     def __init__(self, in_channels, num_points=250, avgPool=False):
         super(PointNetFeat, self).__init__()
 
-        self.num_points = num_points
+        self.num_points = num_points*2
 
         self.conv1 = torch.nn.Conv1d(in_channels, 64, 1)
         self.conv2 = torch.nn.Conv1d(64, 128, 1)

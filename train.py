@@ -95,9 +95,9 @@ print('')
 # ---- SET UP MODEL ----
 
 if arg.dual:
-    model = DualPointNet(num_points=arg.num_points, in_channels=6, avgPool=arg.avg_pool, sigmoid = arg.sigmoid, dropout=arg.dropout)
+    model = DualPointNet(num_points=arg.num_points, in_channels=6, avgPool=arg.avg_pool, sigmoid=arg.sigmoid, dropout=arg.dropout)
 else:
-    model = PointNet(num_points=arg.num_points, in_channels=12, avgPool=arg.avg_pool, sigmoid = arg.sigmoid, dropout=arg.dropout)
+    model = PointNet(num_points=arg.num_points, in_channels=12, avgPool=arg.avg_pool, sigmoid=arg.sigmoid, dropout=arg.dropout)
 
 if arg.model != '':
     model.load_state_dict(torch.load(arg.model))
