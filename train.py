@@ -166,8 +166,9 @@ posttrain_train_score,x2,y2 = evaluateModel(model, test_loss_func, dataloader, a
 
 plt.scatter(x2,y2, label='Train',s=1)
 plt.scatter(x1,y1, label='Test',s=1)
-plt.xlim(0,1)
-plt.ylim(0,1)
+plt.xlim(xmin=0)
+plt.ylim(ymin=0)
+plt.axis('equal')
 plt.title('Siamese Pointnet')
 plt.xlabel('Truth')
 plt.ylabel('Prediction')
