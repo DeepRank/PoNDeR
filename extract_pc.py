@@ -25,6 +25,7 @@ parser.add_argument('--decoy_dir', type=str, default='decoys/', help='Relative p
 parser.add_argument('--decoy_subdir', type=str, default='', help='Subfolder within specific decoy folder (e.g. water/)')
 parser.add_argument('--native_dir', type=str, default='natives/', help='Relative path to natives')
 parser.add_argument('--dual', dest='dual', default=False, action='store_true',help='Store pointclouds of different proteins separately')
+parser.add_argument('--filename', type=str, default='', help='Name of HDF5 file')
 arg = parser.parse_args()
 
 # Force field provided with deeprank
@@ -34,10 +35,13 @@ param_vdw = FF + 'protein-allhdg5-4_new.param'
 patch_file = FF + 'patch.top'
 
 # Prepare HDF5 file & groups
-if arg.dual:
-    filename = 'dualPointclouds.h5'
+if arg.filename == '':
+    if arg.dual:
+        filename = 'dualPointclouds.h5'
+    else:
+        filename = 'pointclouds.h5'
 else:
-    filename = 'pointclouds.h5'
+    filename = arg.filename
 
 hf = h5py.File(filename, 'w')
 
