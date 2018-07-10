@@ -172,5 +172,5 @@ plt.title('Siamese Pointnet')
 plt.xlabel('Truth')
 plt.ylabel('Prediction')
 plt.legend(loc='best')
-plt.draw
+plt.draw()
 plt.savefig('post-train.png')
