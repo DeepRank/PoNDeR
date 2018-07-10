@@ -19,18 +19,21 @@ class PDBset(data.Dataset):
         return len(self.keys)
 
     def __getitem__(self, idx):
-        subgroup = self.group.get(self.keys[idx])
-        pcA = np.array(subgroup.get('A'))
-        pcB = np.array(subgroup.get('B'))
-        mtrc = subgroup.attrs[self.metric]
-
-        pcA = np.c_[pcA, np.zeros_like(pcA)]
-        pcB = np.c_[np.zeros_like(pcB), pcB]
-        pc = np.r_[pcA, pcB].astype(np.float32)
-
-        pc = samplePoints(pc, self.num_points)
-
+        pc = self.group.get(self.keys[idx])
+        mtrc = pc.attrs[self.metric]
+        pc = samplePoints(np.array(pc), self.num_points)
         return torch.from_numpy(pc), np.float32(mtrc)
+
+    def getMin(self):
+        minSize = 100000000 # Hacky but works
+        for key in self.keys:
+            pc = np.array(self.group.get(key))
+            if len(pc) < minSize:
+                minSize = min(len(pcA), len(pcB))
+        return minSize
+    
+    def getFeatWidth(self):
+        return self.group.attrs['feat_width']
 
 class DualPDBset(data.Dataset):
     def __init__(self, hdf5_file, num_points, group='train', metric='dockQ'):
@@ -62,9 +65,12 @@ class DualPDBset(data.Dataset):
             subgroup = self.group.get(key)
             pcA = np.array(subgroup.get('A'))
             pcB = np.array(subgroup.get('B'))
-            if min(len(pcA), len(pcB)):
+            if min(len(pcA), len(pcB)) < minSize:
                 minSize = min(len(pcA), len(pcB))
         return minSize
+    
+    def getFeatWidth(self):
+        return self.group.attrs['feat_width']
 
 # Zero concatenation, safe for maxpooling but not for avgpooling
 def samplePoints(pc, num_points):
