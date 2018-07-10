@@ -29,7 +29,7 @@ class PDBset(data.Dataset):
         for key in self.keys:
             pc = np.array(self.group.get(key))
             if len(pc) < minSize:
-                minSize = min(len(pcA), len(pcB))
+                minSize = len(pc)
         return minSize
     
     def getFeatWidth(self):
