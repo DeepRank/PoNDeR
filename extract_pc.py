@@ -10,6 +10,9 @@ import random
 from deeprank.features import AtomicFeature
 from deeprank.tools import StructureSimilarity
 
+from multiprocessing.dummy import Pool as ThreadPool 
+pool = ThreadPool(4) 
+
 '''
 KNOWN ERROR
 
@@ -26,7 +29,17 @@ parser.add_argument('--decoy_subdir', type=str, default='', help='Subfolder with
 parser.add_argument('--native_dir', type=str, default='natives/', help='Relative path to natives')
 parser.add_argument('--dual', dest='dual', default=False, action='store_true',help='Store pointclouds of different proteins separately')
 parser.add_argument('--filename', type=str, default='', help='Name of HDF5 file')
+parser.add_argument('--pairs', dest='pairs', default=False, action='store_true', help='Store rows of atom pairs instead of single atoms')
+parser.add_argument('--full_cloud', dest='full_cloud', default=False, action='store_true', help='Store full clouds instead of contact atoms')
 arg = parser.parse_args()
+
+# Check for incompatibilities
+
+if arg.dual and arg.pairs:
+    raise AttributeError('Dual and pair options are incomplatible')
+
+if arg.full_cloud and arg.pairs: 
+    raise AttributeError('Pairs can not be stored when storing full clouds')
 
 # Force field provided with deeprank
 FF = pkg_resources.resource_filename('deeprank.features', '') + '/forcefield/'
@@ -49,6 +62,12 @@ g_test = hf.create_group('test')
 g_train = hf.create_group('train')
 g_holdout = hf.create_group('holdout')
 
+# Feature width
+if arg.dual:
+    hf.attrs['feat_width'] = 8
+else:
+    hf.attrs['feat_width'] = 16
+
 # Random distribution of protein pairs among groups
 def getGroup(native_name):
     rand = random.random()
@@ -61,9 +80,9 @@ def getGroup(native_name):
     return group
 
 # Start converting
-for native_name in sorted(os.listdir(arg.root_dir+arg.native_dir)):
+def convertFolder(native_name):
     decoy_dir = arg.root_dir+arg.decoy_dir+native_name[:4]+'/'+arg.decoy_subdir
-    if os.path.isdir(decoy_dir):
+    if os.path.isdir(decoy_dir) and native_name.endswith(".pdb"):
         group = getGroup(native_name)
         print('Putting', native_name[:4], 'in', group.name)
         for decoy_name in sorted(os.listdir(decoy_dir)):
@@ -76,26 +95,52 @@ for native_name in sorted(os.listdir(arg.root_dir+arg.native_dir)):
             # Compute the pair interactions
             atFeat.evaluate_pair_interaction()
 
-            # Get contact atoms, append features
-                # x, y, z   -> Coordinates
-                # occ       -> Occupancy
-                # temp      -> Temperature factor (uncertainty)
-                # eps       -> 
-                # sig       -> Sigma
-                # charge    ->
-            indA, indB = atFeat.sqldb.get_contact_atoms(cutoff=6.5)
+            cont = True
+            if arg.pairs: # Pairwise extraction
+                index = atFeat.sqldb.get_contact_atoms(return_contact_pairs=True, cutoff=7) # Get contact atoms
+                pc_pairs = []
 
-            if len(indA)==0: # If no contact atoms found
-                print('    ', decoy_name[:-4], 'did not contain contact atoms')
-            else: 
-                pcA = np.array(atFeat.sqldb.get('x,y,z,eps,sig,charge', rowID=indA)).astype(np.float32)
-                pcB = np.array(atFeat.sqldb.get('x,y,z,eps,sig,charge', rowID=indB)).astype(np.float32)
+                if index: # If not empty
+                    for key,val in index.items():
+                        pc1 = atFeat.sqldb.get('x,y,z,eps,sig,charge',rowID=key)[0]
+                        pc2 = atFeat.sqldb.get('x,y,z,eps,sig,charge',rowID=val)
+                        a = np.array(pc1[0:3], dtype=np.float32)
+                        
+                        for p in pc2:
+                            b = np.array(p[0:3], dtype=np.float32)
+                            dist = np.linalg.norm(a-b) # Euclidian distance
+                            pc_pairs.append(pc1+p+[dist])
+                    
+                    pc = np.vstack(pc_pairs).astype(np.float32) # List of atom pair parameters to array
+                else: # If no contact atoms found
+                    cont = False                
+                
+            else: # Single atom extraction
+                indA, indB = atFeat.sqldb.get_contact_atoms(cutoff=7) # Get contact atoms
 
-                if not arg.dual:
-                    pcA = np.c_[pcA, np.zeros_like(pcA)]
-                    pcB = np.c_[np.zeros_like(pcB), pcB]
-                    pc = np.r_[pcA, pcB].astype(np.float32)
+                if len(indA)==0: # If no contact atoms found
+                    cont = False
+                else:
+                    '''
+                    x, y, z   -> Coordinates
+                    occ       -> Occupancy
+                    temp      -> Temperature factor (uncertainty)
+                    eps       -> 
+                    sig       -> Sigma
+                    charge    ->
+                    '''
+                    if arg.full_cloud: # All atoms
+                        pcA = np.array(atFeat.sqldb.get('x,y,z,eps,sig,charge,temp,occ', chainID='A')).astype(np.float32)
+                        pcB = np.array(atFeat.sqldb.get('x,y,z,eps,sig,charge,temp,occ', chainID='B')).astype(np.float32)
+                    else: # Only contact atoms
+                        pcA = np.array(atFeat.sqldb.get('x,y,z,eps,sig,charge,temp,occ', rowID=indA)).astype(np.float32)
+                        pcB = np.array(atFeat.sqldb.get('x,y,z,eps,sig,charge,temp,occ', rowID=indB)).astype(np.float32)
 
+                    if not arg.dual: # Pad with zeros and concatenate
+                        pcA = np.c_[pcA, np.zeros_like(pcA)] # Pad right
+                        pcB = np.c_[np.zeros_like(pcB), pcB] # Pad left
+                        pc  = np.r_[pcA, pcB]
+            if cont:
                 # Get metrics
                 sim = StructureSimilarity(decoy_dir+'/'+decoy_name, arg.root_dir+arg.native_dir+native_name)
                 irmsd = sim.compute_irmsd_fast(method='svd')
@@ -119,6 +164,10 @@ for native_name in sorted(os.listdir(arg.root_dir+arg.native_dir)):
                     ds.attrs['fnat']  = fnat
                     ds.attrs['dockQ'] = dockQ
                 print('    ',decoy_name[:-4], 'done')
+            else: 
+                print('    ',decoy_name[:-4], 'did not contain contact atoms')
     else:
         print(decoy_dir, 'not found')
+
+pool.map(convertFolder, sorted(os.listdir(arg.root_dir+arg.native_dir)))
 hf.close()
