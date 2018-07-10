@@ -10,9 +10,6 @@ import random
 from deeprank.features import AtomicFeature
 from deeprank.tools import StructureSimilarity
 
-from multiprocessing.dummy import Pool as ThreadPool 
-pool = ThreadPool(4) 
-
 '''
 KNOWN ERROR
 
@@ -31,6 +28,7 @@ parser.add_argument('--dual', dest='dual', default=False, action='store_true',he
 parser.add_argument('--filename', type=str, default='', help='Name of HDF5 file')
 parser.add_argument('--pairs', dest='pairs', default=False, action='store_true', help='Store rows of atom pairs instead of single atoms')
 parser.add_argument('--full_cloud', dest='full_cloud', default=False, action='store_true', help='Store full clouds instead of contact atoms')
+parser.add_argument('--minimal', dest='minimal', default=False, action='store_true', help='One per folder, merely for testing')
 arg = parser.parse_args()
 
 # Check for incompatibilities
@@ -80,7 +78,7 @@ def getGroup(native_name):
     return group
 
 # Start converting
-def convertFolder(native_name):
+for native_name in sorted(os.listdir(arg.root_dir+arg.native_dir)):
     decoy_dir = arg.root_dir+arg.decoy_dir+native_name[:4]+'/'+arg.decoy_subdir
     if os.path.isdir(decoy_dir) and native_name.endswith(".pdb"):
         group = getGroup(native_name)
@@ -166,8 +164,9 @@ def convertFolder(native_name):
                 print('    ',decoy_name[:-4], 'done')
             else: 
                 print('    ',decoy_name[:-4], 'did not contain contact atoms')
+
+            if arg.minimal: # For testing this script
+                break
     else:
         print(decoy_dir, 'not found')
-
-pool.map(convertFolder, sorted(os.listdir(arg.root_dir+arg.native_dir)))
 hf.close()
