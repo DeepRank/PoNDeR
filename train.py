@@ -164,7 +164,6 @@ print('    Post-train test score = %.5f' %(posttrain_test_score))
 print('    Creating plot...')
 posttrain_train_score,x2,y2 = evaluateModel(model, test_loss_func, dataloader, arg.dual, arg.CUDA)
 
-plt.axis('equal')
 plt.xlim(xmin=0)
 plt.ylim(ymin=0)
 plt.scatter(x2,y2, label='Train',s=1)
