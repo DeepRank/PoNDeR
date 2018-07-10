@@ -63,6 +63,8 @@ g_holdout = hf.create_group('holdout')
 # Feature width
 if arg.dual:
     hf.attrs['feat_width'] = 8
+elif arg.pairs:
+    hf.attrs['feat_width'] = 17
 else:
     hf.attrs['feat_width'] = 16
 
@@ -100,8 +102,8 @@ for native_name in sorted(os.listdir(arg.root_dir+arg.native_dir)):
 
                 if index: # If not empty
                     for key,val in index.items():
-                        pc1 = atFeat.sqldb.get('x,y,z,eps,sig,charge',rowID=key)[0]
-                        pc2 = atFeat.sqldb.get('x,y,z,eps,sig,charge',rowID=val)
+                        pc1 = atFeat.sqldb.get('x,y,z,eps,sig,charge,temp,occ',rowID=key)[0]
+                        pc2 = atFeat.sqldb.get('x,y,z,eps,sig,charge,temp,occ',rowID=val)
                         a = np.array(pc1[0:3], dtype=np.float32)
                         
                         for p in pc2:
