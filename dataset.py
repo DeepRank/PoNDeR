@@ -31,6 +31,12 @@ class PDBset(data.Dataset):
             if len(pc) < minSize:
                 minSize = len(pc)
         return minSize
+
+    def getLengths(self):
+        lengths = np.zeros(len(self.keys))
+        for key, i in self.keys:
+            lengths[i] = len(np.array(self.group.get(key)))
+        return lengths
     
     def getFeatWidth(self):
         return self.hf.attrs['feat_width'].item()
