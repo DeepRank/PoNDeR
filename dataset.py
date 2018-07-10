@@ -33,7 +33,7 @@ class PDBset(data.Dataset):
         return minSize
     
     def getFeatWidth(self):
-        return self.hf.attrs['feat_width'].astype(np.int32)
+        return self.hf.attrs['feat_width'].item()
 
 class DualPDBset(data.Dataset):
     def __init__(self, hdf5_file, num_points, group='train', metric='dockQ'):
