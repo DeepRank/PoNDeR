@@ -4,5 +4,4 @@
 *.refpairs
 *.pyc
 log.txt
-*.png
 *.h5
