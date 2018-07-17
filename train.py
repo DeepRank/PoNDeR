@@ -116,8 +116,8 @@ elif arg.optimizer == 'SGD':
 
 scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, num_batch)
 
-train_loss_func = nn.MSELoss()
-test_loss_func = nn.MSELoss(size_average=False)
+train_loss_func = FavorHighLoss()
+test_loss_func = FavorHighLoss(size_average=False)
 
 # ---- MODEL TRAINING ----
 
@@ -161,7 +161,7 @@ print('START EVALUATION')
 posttrain_test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA)
 print('    Post-train test loss = %.5f' %(posttrain_test_score))
 posttrain_train_score,x2,y2 = evaluateModel(model, test_loss_func, dataloader, arg.dual, arg.CUDA)
-print('    Post-train train loss = %.5f' %(posttrain_test_score))
+print('    Post-train train loss = %.5f' %(posttrain_train_score))
 
 print('    Creating plot...')
 plt.scatter(x2,y2, label='Train',s=1)
@@ -169,7 +169,7 @@ plt.scatter(x1,y1, label='Test',s=1)
 plt.xlim(xmin=0)
 plt.xlabel('Truth')
 plt.ylabel('Prediction')
-title = 'Test loss: ' + posttrain_test_score
+title = 'Test loss: ' + str(posttrain_test_score)
 plt.title(title)
 plt.legend(loc='best')
 plt.savefig('post-train.png')
