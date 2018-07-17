@@ -179,6 +179,7 @@ for epoch in range(arg.num_epoch):
             print('    Early stopping condition reached')
             break 
     else:
+        early_stop_count = 0
         saveModel(model,arg)
         prev_test_score = test_score
 
