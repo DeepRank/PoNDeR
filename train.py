@@ -167,7 +167,7 @@ for epoch in range(arg.num_epoch):
 
     # This section runs at the end of each batch
     test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA)
-    print('    E: %02d - Mean train loss = %.5f' %(epoch+1, avg_train_score/num_batch))
+    print('    E: %02d - Mean train loss = %.5f             ' %(epoch+1, avg_train_score/num_batch))
     print('    E: %02d - Test loss = %.5f\n' %(epoch+1, test_score))
 
     # Early stopping
