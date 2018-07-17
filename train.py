@@ -128,44 +128,57 @@ prev_test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader, arg.dua
 print('    Before training - Test loss = %.5f\n' %(prev_test_score))
 
 for epoch in range(arg.num_epoch):
+    avg_train_score = 0
 
+    # Loss rate scheduling
     if schedFlag:
         scheduler.base_lrs = [arg.lr*(1-(epoch**2)/(arg.num_epoch**2))]
         scheduler.step(epoch=0)
 
+    # Iterate over minibatches
     for i, data in enumerate(dataloader, 0):
         optimizer.zero_grad()
+
+        # Data loading & manipulation
         points, target = data
         points, target = Variable(points), Variable(target)  # Deprecated in PyTorch >=0.4
-        if len(target) != arg.batch_size:
-            break # No partial batches, in order to reduce noise in gradient
         points = points.transpose(2, 1)
         if arg.CUDA:
             points, target = points.cuda(), target.cuda()
+
+        # No partial last batches, in order to reduce noise in gradient.
+        if len(target) != arg.batch_size:
+            break 
+
+        # Forward and backward pass
         prediction = model(points).view(-1)
         loss = train_loss_func(prediction, target)
+        avg_train_score += loss
         loss.backward()
         print('    E: %02d - %02d/%02d - LR: %.6f - Loss: %.5f' %(epoch+1, i+1, num_batch, get_lr(optimizer)[0], loss), flush=True,  end="\r")
+
+        # Stepping
         optimizer.step()
         if arg.cosine_decay:
             scheduler.step()
-    
+
+    # This section runs at the end of each batch
     test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA)
-    print('')
+    print('    E: %02d - Mean train loss = %.5f' %(epoch+1, avg_train_score/num_batch))
     print('    E: %02d - Test loss = %.5f\n' %(epoch+1, test_score))
+
+    # Early stopping
     if test_score > prev_test_score:
-        break # Early stopping
+        print('    Early stopping condition reached')
+        break 
     else:
         saveModel(model,arg)
         prev_test_score = test_score
-    
+
+# ---- REVERT TO BEST MODEL ----
+
+print('    Reverting to best known model\n')    
 model.load_state_dict(torch.load('%s/PPIPointNet.pth' % (arg.out_folder))) # Load best known configuration
-
-# ---- SAVE MODEL ----
-
-print('SAVING MODEL')
-saveModel(model,arg)
-print('    Model saved\n')
 
 # ---- PLOTTING ----
 
