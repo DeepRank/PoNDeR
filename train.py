@@ -135,7 +135,7 @@ for epoch in range(arg.num_epoch):
         points, target = data
         points, target = Variable(points), Variable(target)  # Deprecated in PyTorch >=0.4
         if len(target) != arg.batch_size:
-            break
+            break # No partial batches, in order to noise in gradient
         points = points.transpose(2, 1)
         if arg.CUDA:
             points, target = points.cuda(), target.cuda()
@@ -159,14 +159,17 @@ print('    Model saved\n')
 print('START EVALUATION')
 
 posttrain_test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA)
-
-print('    Post-train test score = %.5f' %(posttrain_test_score))
-print('    Creating plot...')
+print('    Post-train test loss = %.5f' %(posttrain_test_score))
 posttrain_train_score,x2,y2 = evaluateModel(model, test_loss_func, dataloader, arg.dual, arg.CUDA)
+print('    Post-train train loss = %.5f' %(posttrain_test_score))
 
+print('    Creating plot...')
 plt.scatter(x2,y2, label='Train',s=1)
 plt.scatter(x1,y1, label='Test',s=1)
+plt.xlim(xmin=0)
 plt.xlabel('Truth')
 plt.ylabel('Prediction')
+title = 'Test loss: ' + posttrain_test_score
+plt.title(title)
 plt.legend(loc='best')
 plt.savefig('post-train.png')

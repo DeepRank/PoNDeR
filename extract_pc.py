@@ -61,6 +61,8 @@ else:
     hf.attrs['feat_width'] = 16
 
 # Random distribution of protein pairs among groups
+random.seed(1) # Deterministic data split
+
 def getGroup(native_name):
     rand = random.random()
     if rand < 0.7:
