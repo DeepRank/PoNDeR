@@ -11,6 +11,7 @@ import torch.optim as optim
 import torch.utils.data as data
 from torch.autograd import Variable
 
+import seaborn as sns; sns.set(color_codes=True)
 import matplotlib
 if os.environ.get('DISPLAY','') == '':
     matplotlib.use('Agg')
@@ -164,8 +165,11 @@ posttrain_train_score,x2,y2 = evaluateModel(model, test_loss_func, dataloader, a
 print('    Post-train train loss = %.5f' %(posttrain_train_score))
 
 print('    Creating plot...')
-plt.hexbin(x2,y2, label='Train')
-plt.hexbin(x1,y1, label='Test')
+ax = sns.kdeplot(x2,y2, cmap="Blues", shade=True, shade_lowest=False)
+ax = sns.kdeplot(x1,y1, cmap="Reds", shade=True, shade_lowest=False)
+ax.savefig('output.png')
+plt.scatter(x2,y2, label='Train',s=1, alpha=0.1)
+plt.scatter(x1,y1, label='Test',s=1, alpha=0.1)
 plt.xlim(xmin=0)
 plt.xlabel('Truth')
 plt.ylabel('Prediction')
