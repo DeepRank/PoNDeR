@@ -95,15 +95,18 @@ print('')
 # ---- SET UP MODEL ----
 
 if arg.dual:
-    model = DualPointNet(num_points=arg.num_points, in_channels=dataset.getFeatWidth(), avgPool=arg.avg_pool, sigmoid=arg.sigmoid, dropout=arg.dropout)
+    net = DualPointNet(num_points=arg.num_points, in_channels=dataset.getFeatWidth(), avgPool=arg.avg_pool, sigmoid=arg.sigmoid, dropout=arg.dropout)
 else:
-    model = PointNet(num_points=arg.num_points, in_channels=dataset.getFeatWidth(), avgPool=arg.avg_pool, sigmoid=arg.sigmoid, dropout=arg.dropout)
+    net = PointNet(num_points=arg.num_points, in_channels=dataset.getFeatWidth(), avgPool=arg.avg_pool, sigmoid=arg.sigmoid, dropout=arg.dropout)
 
 if arg.model != '':
-    model.load_state_dict(torch.load(arg.model))
+    net.load_state_dict(torch.load(arg.model))
 
 if arg.CUDA:
-    model.cuda()
+    net.cuda()
+    model = torch.nn.DataParallel(net)
+else:
+    model = net
 
 if arg.optimizer == 'Adam':
     optimizer = optim.Adam(model.parameters(), lr=arg.lr)
