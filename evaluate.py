@@ -20,4 +20,5 @@ def evaluateModel(model, loss_func, testloader, dual = False, CUDA = False):
         loss_sum += loss.data[0]
         predictions.append(prediction)
         targets.append(target)
+    mode.train()
     return loss_sum / cnt, torch.cat(targets), torch.cat(predictions)

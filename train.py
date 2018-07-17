@@ -51,9 +51,9 @@ parser.add_argument('--num_workers',type=int,  default=1, help='Number of data l
 parser.add_argument('--num_epoch',  type=int,  default=5, help='Number of epochs to train for (default = 5)')
 parser.add_argument('--cosine_decay',dest='cosine_decay', default=False, action='store_true', help='Use cosine annealing for learning rate decay')
 parser.add_argument('--CUDA',       dest='CUDA', default=False, action='store_true', help='Train on GPU')
-parser.add_argument('--out_folder', type=str, default='/artifacts',  help='Model output folder')
+parser.add_argument('--out_folder', type=str, default='~',  help='Model output folder')
 parser.add_argument('--model',      type=str, default='',   help='Model input path')
-parser.add_argument('--data_path',  type=str, default='/home/lukas/PoNDeR/dualPointclouds.h5')
+parser.add_argument('--data_path',  type=str, default='~', help='Path to HDF5 file')
 parser.add_argument('--lr',         type=float, default=0.001, help='Learning rate (default = 0.001)')
 parser.add_argument('--optimizer',  type=str, default='Adam', help='What optimizer to use. Options: Adam, SGD')
 parser.add_argument('--avg_pool',   dest='avg_pool', default=False, action='store_true', help='Use average pooling after for feature pooling (instead of default max pooling)')
@@ -124,6 +124,9 @@ test_loss_func = FavorHighLoss(size_average=False)
 print('START TRAINING')
 model.train()  # Set to training mode
 
+prev_test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA)
+print('    Before training - Test loss = %.5f\n' %(prev_test_score))
+
 for epoch in range(arg.num_epoch):
 
     if schedFlag:
@@ -142,11 +145,21 @@ for epoch in range(arg.num_epoch):
         prediction = model(points).view(-1)
         loss = train_loss_func(prediction, target)
         loss.backward()
-        print('    E: %02d - %02d/%02d - LR: %.6f - Loss: %.5f' %(epoch+1, i+1, num_batch, get_lr(optimizer)[0], loss), flush=True)
+        print('    E: %02d - %02d/%02d - LR: %.6f - Loss: %.5f' %(epoch+1, i+1, num_batch, get_lr(optimizer)[0], loss), flush=True,  end="\r")
         optimizer.step()
         if arg.cosine_decay:
             scheduler.step()
+    
+    test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA)
     print('')
+    print('    E: %02d - Test loss = %.5f\n' %(test_score))
+    if test_score > prev_test_score:
+        break # Early stopping
+    else:
+        saveModel(model,arg)
+        prev_test_score = test_score
+    
+model.load_state_dict(torch.load('%s/PPIPointNet.pth' % (arg.out_folder))) # Load best known configuration
 
 # ---- SAVE MODEL ----
 
@@ -154,24 +167,22 @@ print('SAVING MODEL')
 saveModel(model,arg)
 print('    Model saved\n')
 
-# ---- FINAL TEST SET EVALUATION ----
+# ---- PLOTTING ----
 
-print('START EVALUATION')
-
-posttrain_test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA)
-print('    Post-train test loss = %.5f' %(posttrain_test_score))
-posttrain_train_score,x2,y2 = evaluateModel(model, test_loss_func, dataloader, arg.dual, arg.CUDA)
-print('    Post-train train loss = %.5f' %(posttrain_train_score))
+print('CREATING PLOT')
+train_score,x2,y2 = evaluateModel(model, test_loss_func, dataloader, arg.dual, arg.CUDA)
+print('    Final train loss = %.5f' %(train_score))
 
 print('    Creating plot...')
 fig, ax = plt.subplots()
-ax.scatter(x2.data.cpu(),y2.data.cpu(), label='Train',s=1, alpha=0.3)
-ax.scatter(x1.data.cpu(),y1.data.cpu(), label='Test',s=1, alpha=0.3 )
+ax.scatter(x2.data.cpu(),y2.data.cpu(), label='Train',s=1, alpha=0.5)
+ax.scatter(x1.data.cpu(),y1.data.cpu(), label='Test',s=1, alpha=0.5)
 ax.set_ylabel('Prediction')
 ax.set_xlabel('Truth')
 ax.set_xlim(xmin=0.0)
 ax.set_ylim(ymin=0.0)
 ax.legend(loc='best')
-title = 'Test loss: %.5f' %posttrain_test_score
+title = 'Test loss: %.5f' %test_score
 fig.suptitle(title)
-fig.savefig('post-train.png')
+fig.set_size_inches(18.5, 10.5)
+fig.savefig('post-train.png', dpi=100)
