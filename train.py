@@ -130,6 +130,8 @@ model.train()  # Set to training mode
 prev_test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA)
 print('    Before training - Test loss = %.5f\n' %(prev_test_score))
 
+early_stop_count = 0
+
 for epoch in range(arg.num_epoch):
     avg_train_score = 0
 
@@ -172,8 +174,10 @@ for epoch in range(arg.num_epoch):
 
     # Early stopping
     if test_score > prev_test_score:
-        print('    Early stopping condition reached')
-        break 
+        early_stop_count += 1
+        if early_stop_count == 3:
+            print('    Early stopping condition reached')
+            break 
     else:
         saveModel(model,arg)
         prev_test_score = test_score
