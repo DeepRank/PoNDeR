@@ -185,7 +185,7 @@ for epoch in range(arg.num_epoch):
 
 # ---- REVERT TO BEST MODEL ----
 
-print('    Reverting to best known model\n')    
+print('    Reverting to best known model (test loss = %.5f)\n' %prev_test_score)    
 model.load_state_dict(torch.load('%s/PPIPointNet.pth' % (arg.out_folder))) # Load best known configuration
 
 # ---- PLOTTING ----
@@ -203,7 +203,7 @@ ax.set_xlabel('Truth')
 ax.set_xlim(xmin=0.0)
 ax.set_ylim(ymin=0.0)
 ax.legend(loc='best')
-title = 'Test loss: %.5f' %test_score
+title = 'Test loss: %.5f' %prev_test_score
 fig.suptitle(title)
 fig.set_size_inches(18.5, 10.5)
 fig.savefig('post-train.png', dpi=100)
