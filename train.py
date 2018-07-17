@@ -152,7 +152,7 @@ for epoch in range(arg.num_epoch):
     
     test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA)
     print('')
-    print('    E: %02d - Test loss = %.5f\n' %(test_score))
+    print('    E: %02d - Test loss = %.5f\n' %(epoch+1, test_score))
     if test_score > prev_test_score:
         break # Early stopping
     else:
