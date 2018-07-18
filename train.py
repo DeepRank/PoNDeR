@@ -24,7 +24,7 @@ from evaluate import evaluateModel
 from dataset import PDBset, DualPDBset
 from utils import get_lr, saveModel, FavorHighLoss
 
-time = datetime.datetime.utcnow()
+time = datetime.datetime.now()
 
 # ---- OPTION PARSING ----
 
@@ -46,7 +46,7 @@ parser.add_argument('--dropout',    type=float, default=0.5, help='Dropout rate 
 
 arg = parser.parse_args()
 
-save_path = arg.out_folder+'/'+time.strftime('%d-%m_%H-%M')
+save_path = arg.out_folder+'/'+time.strftime('%d%m-%H%M')
 
 if not os.path.exists(save_path):
     os.makedirs(save_path)
@@ -113,16 +113,16 @@ if arg.dual:
 else:
     net = PointNet(num_points=arg.num_points, in_channels=dataset.getFeatWidth(), avgPool=arg.avg_pool, sigmoid=sigmoid, dropout=arg.dropout)
 
-# Model loading (continued/transfer learning)
-if arg.model != '':
-    net.load_state_dict(torch.load(arg.model)) 
-
 # GPU  & GPu parallellization
 if arg.CUDA:
     net.cuda()
     model = torch.nn.DataParallel(net) 
 else:
     model = net
+
+# Model loading (continued/transfer learning)
+if arg.model != '':
+    model.load_state_dict(torch.load(arg.model)) 
 
 # Optimizer selection
 if arg.optimizer == 'Adam':
