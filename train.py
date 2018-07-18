@@ -25,6 +25,8 @@ from utils import get_lr, saveModel, FavorHighLoss
 
 # PRINT INFORMATION
 
+time = datetime.datetime.utcnow()
+
 print('ABOUT')
 print('    Simplified PointNet for Protein-Protein Reaction - Training script')
 print('    Lukas De Clercq, 2018, Netherlands eScience Center\n')
@@ -34,7 +36,7 @@ print('RUNTIME INFORMATION')
 print('    System    -', platform.system(), platform.release(), platform.machine())
 print('    Version   -', platform.version())
 print('    Node      -', platform.node())
-print('    Time      -', datetime.datetime.utcnow(), 'UTC', '\n')
+print('    Time      -', time, 'UTC', '\n')
 
 print('LIBRARY VERSIONS')
 print('    Python    -', platform.python_version(), 'on', platform.python_compiler())
@@ -45,23 +47,20 @@ print('    CUDNN     -', torch.backends.cudnn.version(), '\n', flush = True)
 # ---- OPTION PARSING ----
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--batch_size', type=int, default=50, help='Input batch size (default = 50)')
-parser.add_argument('--num_points', type=int, default=350, help='Points per point cloud used (default = 350)')
-parser.add_argument('--num_workers',type=int,  default=1, help='Number of data loading workers (default = 1)')
-parser.add_argument('--num_epoch',  type=int,  default=5, help='Number of epochs to train for (default = 5)')
-parser.add_argument('--cosine_decay',dest='cosine_decay', default=False, action='store_true', help='Use cosine annealing for learning rate decay')
+parser.add_argument('--batch_size', type=int, default=256, help='Input batch size (default = 256)')
+parser.add_argument('--num_points', type=int, default=1024, help='Points per point cloud used (default = 1024)')
+parser.add_argument('--num_epoch',  type=int,  default=15, help='Number of epochs to train for (default = 15)')
 parser.add_argument('--CUDA',       dest='CUDA', default=False, action='store_true', help='Train on GPU')
 parser.add_argument('--out_folder', type=str, default='~',  help='Model output folder')
 parser.add_argument('--model',      type=str, default='',   help='Model input path')
 parser.add_argument('--data_path',  type=str, default='~', help='Path to HDF5 file')
-parser.add_argument('--lr',         type=float, default=0.001, help='Learning rate (default = 0.001)')
-parser.add_argument('--optimizer',  type=str, default='Adam', help='What optimizer to use. Options: Adam, SGD')
+parser.add_argument('--lr',         type=float, default=0.0001, help='Learning rate (default = 0.0001)')
+parser.add_argument('--optimizer',  type=str, default='Adam', help='What optimizer to use. Options: Adam, SGD, SGD_cos')
 parser.add_argument('--avg_pool',   dest='avg_pool', default=False, action='store_true', help='Use average pooling after for feature pooling (instead of default max pooling)')
 parser.add_argument('--dual',       dest='dual', default=False, action='store_true', help='Use DualPointNet architecture')
 parser.add_argument('--get_min',    dest='get_min', default=False, action='store_true', help='Get minimum point cloud size')
-parser.add_argument('--sigmoid',    dest='sigmoid', default=False, action='store_true', help='Use sigmoid on final output')
 parser.add_argument('--metric',     type=str, default='dockQ',   help='Metric to be used. Options: irmsd, lrmsd, fnat, dockQ (default)')
-parser.add_argument('--dropout',    type=float, default=0.3, help='Dropout rate in last layer. When 0 replaced by batchnorm (default = 0.3)')
+parser.add_argument('--dropout',    type=float, default=0.5, help='Dropout rate in last layer. When 0 replaced by batchnorm (default = 0.3)')
 
 
 arg = parser.parse_args()
@@ -77,8 +76,8 @@ else:
     dataset = PDBset(hdf5_file=arg.data_path, group='train', num_points=arg.num_points, metric=arg.metric)
     testset = PDBset(hdf5_file=arg.data_path, group='test', num_points=arg.num_points, metric=arg.metric)
 
-dataloader = data.DataLoader(dataset, batch_size=arg.batch_size, shuffle=True, num_workers=int(arg.num_workers))
-testloader = data.DataLoader(testset, batch_size=arg.batch_size, shuffle=True, num_workers=int(arg.num_workers))
+dataloader = data.DataLoader(dataset, batch_size=arg.batch_size, shuffle=True, num_workers=1)
+testloader = data.DataLoader(testset, batch_size=arg.batch_size, shuffle=True, num_workers=1)
 
 num_batch = len(dataset)/arg.batch_size
 
@@ -94,31 +93,38 @@ print('')
 
 # ---- SET UP MODEL ----
 
-if arg.dual:
-    net = DualPointNet(num_points=arg.num_points, in_channels=dataset.getFeatWidth(), avgPool=arg.avg_pool, sigmoid=arg.sigmoid, dropout=arg.dropout)
+# Architecture selection
+
+if arg.metric == 'dockQ':
+    sigmoid = True
 else:
-    net = PointNet(num_points=arg.num_points, in_channels=dataset.getFeatWidth(), avgPool=arg.avg_pool, sigmoid=arg.sigmoid, dropout=arg.dropout)
+    sigmoid = False
 
+if arg.dual:
+    net = DualPointNet(num_points=arg.num_points, in_channels=dataset.getFeatWidth(), avgPool=arg.avg_pool, sigmoid=sigmoid, dropout=arg.dropout)
+else:
+    net = PointNet(num_points=arg.num_points, in_channels=dataset.getFeatWidth(), avgPool=arg.avg_pool, sigmoid=sigmoid, dropout=arg.dropout)
+
+# Model loading (continued/transfer learning)
 if arg.model != '':
-    net.load_state_dict(torch.load(arg.model))
+    net.load_state_dict(torch.load(arg.model)) 
 
+# GPU  & GPu parallellization
 if arg.CUDA:
     net.cuda()
-    model = torch.nn.DataParallel(net)
+    model = torch.nn.DataParallel(net) 
 else:
     model = net
 
+# Optimizer selection
 if arg.optimizer == 'Adam':
     optimizer = optim.Adam(model.parameters(), lr=arg.lr)
-    schedFlag = False
-    if arg.cosine_decay:
-        raise Exception('Cosine decay is not compatible with Adam optimizer!')
-elif arg.optimizer == 'SGD':
+elif arg.optimizer == 'SGD' or arg.optimizer == 'SGD_cos':
     optimizer = optim.SGD(model.parameters(), lr=arg.lr, momentum=0.9)
-    schedFlag = True
 
 scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, num_batch)
 
+# Loss function
 train_loss_func = FavorHighLoss()
 test_loss_func = FavorHighLoss(size_average=False)
 
@@ -129,14 +135,18 @@ model.train()  # Set to training mode
 
 prev_test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA)
 print('    Before training - Test loss = %.5f\n' %(prev_test_score))
+print('    WARNING: Train loss is with the model in eval mode, this')
+print('             alters dropout and batchnorm behaviour. Train loss')
+print('             can be expected to be worse under these conditions')
 
 early_stop_count = 0
 
+# Main epoch loop
 for epoch in range(arg.num_epoch):
     avg_train_score = 0
 
     # Loss rate scheduling
-    if schedFlag:
+    if arg.optimizer == 'SGD_cos':
         scheduler.base_lrs = [arg.lr*(1-(epoch**2)/(arg.num_epoch**2))]
         scheduler.step(epoch=0)
 
@@ -164,12 +174,12 @@ for epoch in range(arg.num_epoch):
 
         # Stepping
         optimizer.step()
-        if arg.cosine_decay:
+        if arg.optimizer == 'SGD_cos':
             scheduler.step()
 
     # This section runs at the end of each batch
     test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA)
-    print('    E: %02d - Mean train loss = %.5f             ' %(epoch+1, avg_train_score/num_batch))
+    print('    E: %02d - Train loss = %.5f              ' %(epoch+1, avg_train_score/num_batch))
     print('    E: %02d - Test loss = %.5f\n' %(epoch+1, test_score))
 
     # Early stopping
@@ -180,7 +190,7 @@ for epoch in range(arg.num_epoch):
             break 
     else:
         early_stop_count = 0
-        saveModel(model,arg)
+        saveModel(model, arg, str(time))
         prev_test_score = test_score
 
 # ---- REVERT TO BEST MODEL ----
@@ -205,5 +215,5 @@ ax.set_ylim(ymin=0.0)
 ax.legend(loc='best')
 title = 'Test loss: %.5f' %prev_test_score
 fig.suptitle(title)
-fig.set_size_inches(18.5, 10.5)
+fig.set_size_inches(19.2, 10.8) # 1920 x 1080 when using 100 dpi
 fig.savefig('post-train.png', dpi=100)
