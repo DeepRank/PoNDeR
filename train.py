@@ -46,7 +46,7 @@ parser.add_argument('--dropout',    type=float, default=0.5, help='Dropout rate 
 
 arg = parser.parse_args()
 
-save_path = arg.out_folder+'/'+time.strftime('%d-%m-_%X')
+save_path = arg.out_folder+'/'+time.strftime('%d-%m_%H-%M')
 
 if not os.path.exists(save_path):
     os.makedirs(save_path)
@@ -70,8 +70,8 @@ with open(save_path+'/log.txt', 'a') as out_file:
 
     print('ABOUT', file=out_file)
     print('    Simplified PointNet for Protein-Protein Reaction', file=out_file)
-    print('    Lukas De Clercq, 2018, Netherlands eScience Center\n', file=out_file)
-    print('    See attached license', file=out_file)
+    print('    Lukas De Clercq, 2018, Netherlands eScience Center', file=out_file)
+    print('    See attached license\n', file=out_file)
 
     print('RUNTIME INFORMATION', file=out_file)
     print('    System    -', platform.system(), platform.release(), platform.machine(), file=out_file)
@@ -86,7 +86,9 @@ with open(save_path+'/log.txt', 'a') as out_file:
     print('    CUDNN     -', torch.backends.cudnn.version(), '\n', file=out_file)
 
     print('RUN PARAMETERS', file=out_file)
-    print('    ', arg, '\n', file=out_file)
+    for a in vars(arg):
+        print('    ', a, getattr(arg, a), file=out_file)
+    print('')
 
     print('DATA PARAMETERS', file=out_file)
     print('    Test & train sizes: %d & %d -> %.1f' %(len(testset), len(dataset), 100*len(testset)/len(dataset)), '%', file=out_file)
@@ -96,6 +98,8 @@ with open(save_path+'/log.txt', 'a') as out_file:
         print('    Minimum pointcloud size:', minSize, '\n', flush=True, file=out_file)
 
 # ---- SET UP MODEL ----
+
+print('Setting up model and getting baseline...\n')
 
 # Architecture selection
 
@@ -181,7 +185,7 @@ for epoch in range(arg.num_epoch):
 
     # This section runs at the end of each batch
     test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA)
-    print('E: %02d - Train loss = %.5f              ' %(epoch+1, avg_train_score/num_batch))
+    print('E: %02d - Mean train loss = %.5f              ' %(epoch+1, avg_train_score/num_batch))
     print('E: %02d - Test loss = %.5f\n' %(epoch+1, test_score))
 
     # Early stopping
