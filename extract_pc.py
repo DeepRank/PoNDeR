@@ -65,9 +65,9 @@ random.seed(1) # Deterministic data split
 
 def getGroup(native_name):
     rand = random.random()
-    if rand < 0.7:
+    if rand < 0.75:
         group = g_train
-    elif rand < 0.85:
+    elif rand < 0.875:
         group = g_test
     else:
         group = g_holdout
