@@ -218,4 +218,5 @@ ax.legend(loc='best')
 title = 'Test loss: %.5f' %prev_test_score # Best known test score
 fig.suptitle(title)
 fig.set_size_inches(19.2, 10.8) # 1920 x 1080 when using 100 dpi
-fig.savefig('post-train.png', dpi=100)
+figname = save_path + '/post-train.png'
+fig.savefig(figname, dpi=100)
