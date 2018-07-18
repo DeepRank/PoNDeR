@@ -11,7 +11,7 @@ def get_lr(optimizer):
 # Save model
 
 def saveModel(model, path):
-    torch.save(model.state_dict(), '%s/PPIPointnet.pth' % (path))
+    torch.save(model.state_dict(), '%s/PoNDeR.pth' % (path))
 
 # favorHighLoss
 

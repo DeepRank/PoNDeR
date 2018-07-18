@@ -17,6 +17,7 @@ if os.environ.get('DISPLAY','') == '':
 import matplotlib.pyplot as plt
 import matplotlib.axes as axs
 import numpy as np
+from pathlib import Path
 
 from PPIPointNet import PointNet, DualPointNet
 from evaluate import evaluateModel
@@ -32,7 +33,7 @@ parser.add_argument('--batch_size', type=int, default=256, help='Input batch siz
 parser.add_argument('--num_points', type=int, default=1024, help='Points per point cloud used (default = 1024)')
 parser.add_argument('--num_epoch',  type=int,  default=15, help='Number of epochs to train for (default = 15)')
 parser.add_argument('--CUDA',       dest='CUDA', default=False, action='store_true', help='Train on GPU')
-parser.add_argument('--out_folder', type=str, default='~',  help='Model output folder')
+parser.add_argument('--out_folder', type=str, default=str(Path.home()),  help='Model output folder')
 parser.add_argument('--model',      type=str, default='',   help='Model input path')
 parser.add_argument('--data_path',  type=str, default='~', help='Path to HDF5 file')
 parser.add_argument('--lr',         type=float, default=0.0001, help='Learning rate (default = 0.0001)')
@@ -41,15 +42,14 @@ parser.add_argument('--avg_pool',   dest='avg_pool', default=False, action='stor
 parser.add_argument('--dual',       dest='dual', default=False, action='store_true', help='Use DualPointNet architecture')
 parser.add_argument('--get_min',    dest='get_min', default=False, action='store_true', help='Get minimum point cloud size')
 parser.add_argument('--metric',     type=str, default='dockQ',   help='Metric to be used. Options: irmsd, lrmsd, fnat, dockQ (default)')
-parser.add_argument('--dropout',    type=float, default=0.5, help='Dropout rate in last layer. When 0 replaced by batchnorm (default = 0.3)')
+parser.add_argument('--dropout',    type=float, default=0.5, help='Dropout rate in last layer. When 0 replaced by batchnorm (default = 0.5)')
 
 arg = parser.parse_args()
 
-save_path = arg.out_folder+'/'+str(time)
+save_path = arg.out_folder+'/'+time.strftime('%d-%m-_%X')
 
 if not os.path.exists(save_path):
     os.makedirs(save_path)
-
 
 # ---- DATA LOADING ----
 
@@ -68,27 +68,27 @@ num_batch = len(dataset)/arg.batch_size
 # ---- PRINT INFORMATION ----
 with open(save_path+'/log.txt', 'a') as out_file:
 
-    print('ABOUT')
+    print('ABOUT', file=out_file)
     print('    Simplified PointNet for Protein-Protein Reaction', file=out_file)
     print('    Lukas De Clercq, 2018, Netherlands eScience Center\n', file=out_file)
     print('    See attached license', file=out_file)
 
-    print('RUNTIME INFORMATION')
+    print('RUNTIME INFORMATION', file=out_file)
     print('    System    -', platform.system(), platform.release(), platform.machine(), file=out_file)
     print('    Version   -', platform.version(), file=out_file)
     print('    Node      -', platform.node(), file=out_file)
     print('    Time      -', time, 'UTC', '\n', file=out_file)
 
-    print('LIBRARY VERSIONS')
+    print('LIBRARY VERSIONS', file=out_file)
     print('    Python    -', platform.python_version(), 'on', platform.python_compiler(), file=out_file)
     print('    Pytorch   -', torch.__version__, file=out_file)
     print('    CUDA      -', torch.version.cuda, file=out_file)
     print('    CUDNN     -', torch.backends.cudnn.version(), '\n', file=out_file)
 
-    print('RUN PARAMETERS')
+    print('RUN PARAMETERS', file=out_file)
     print('    ', arg, '\n', file=out_file)
 
-    print('DATA PARAMETERS')
+    print('DATA PARAMETERS', file=out_file)
     print('    Test & train sizes: %d & %d -> %.1f' %(len(testset), len(dataset), 100*len(testset)/len(dataset)), '%', file=out_file)
 
     if arg.get_min:
@@ -134,14 +134,12 @@ test_loss_func = FavorHighLoss(size_average=False)
 
 # ---- MODEL TRAINING ----
 
-print('START TRAINING')
 model.train()  # Set to training mode
 
 prev_test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA)
-print('    Before training - Test loss = %.5f\n' %(prev_test_score))
-print('    WARNING: Train loss is with the model in eval mode, this')
-print('             alters dropout and batchnorm behaviour. Train loss')
-print('             can be expected to be worse under these conditions')
+print('Before training - Test loss = %.5f\n' %(prev_test_score))
+print('WARNING: Train loss is with the model in eval mode, this alters dropout and batchnorm')
+print('         behaviour. Train loss can be expected to be worse under these conditions\n')
 
 early_stop_count = 0
 
@@ -174,7 +172,7 @@ for epoch in range(arg.num_epoch):
         loss = train_loss_func(prediction, target)
         avg_train_score += loss
         loss.backward()
-        print('    E: %02d - %02d/%02d - LR: %.6f - Loss: %.5f' %(epoch+1, i+1, num_batch, get_lr(optimizer)[0], loss), flush=True,  end="\r")
+        print('E: %02d - %02d/%02d - LR: %.6f - Loss: %.5f' %(epoch+1, i+1, num_batch, get_lr(optimizer)[0], loss), flush=True,  end='\r')
 
         # Stepping
         optimizer.step()
@@ -183,14 +181,14 @@ for epoch in range(arg.num_epoch):
 
     # This section runs at the end of each batch
     test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA)
-    print('    E: %02d - Train loss = %.5f              ' %(epoch+1, avg_train_score/num_batch))
-    print('    E: %02d - Test loss = %.5f\n' %(epoch+1, test_score))
+    print('E: %02d - Train loss = %.5f              ' %(epoch+1, avg_train_score/num_batch))
+    print('E: %02d - Test loss = %.5f\n' %(epoch+1, test_score))
 
     # Early stopping
     if test_score > prev_test_score:
         early_stop_count += 1
         if early_stop_count == 5:
-            print('    Early stopping condition reached')
+            print('Early stopping condition reached')
             break 
     else:
         early_stop_count = 0
@@ -199,16 +197,16 @@ for epoch in range(arg.num_epoch):
 
 # ---- REVERT TO BEST MODEL ----
 
-print('    Reverting to best known model (test loss = %.5f)\n' %prev_test_score)    
+print('Reverting to best known model (test loss = %.5f)\n' %prev_test_score)    
 model.load_state_dict(torch.load('%s/PPIPointNet.pth' % (arg.out_folder))) # Load best known configuration
 
 # ---- PLOTTING ----
 
-print('CREATING PLOT')
+print('Running eval on train set', end='\r')
 train_score,x2,y2 = evaluateModel(model, test_loss_func, dataloader, arg.dual, arg.CUDA)
-print('    Final train loss = %.5f' %(train_score))
+print('Final train loss = %.5f' %(train_score))
 
-print('    Creating plot...')
+print('Creating plot...')
 fig, ax = plt.subplots()
 ax.scatter(x2.data.cpu(),y2.data.cpu(), label='Train',s=1)
 ax.scatter(x1.data.cpu(),y1.data.cpu(), label='Test',s=1)
