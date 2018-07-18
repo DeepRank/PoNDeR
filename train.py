@@ -23,26 +23,7 @@ from evaluate import evaluateModel
 from dataset import PDBset, DualPDBset
 from utils import get_lr, saveModel, FavorHighLoss
 
-# PRINT INFORMATION
-
 time = datetime.datetime.utcnow()
-
-print('ABOUT')
-print('    Simplified PointNet for Protein-Protein Reaction - Training script')
-print('    Lukas De Clercq, 2018, Netherlands eScience Center\n')
-print('    See attached license')
-
-print('RUNTIME INFORMATION')
-print('    System    -', platform.system(), platform.release(), platform.machine())
-print('    Version   -', platform.version())
-print('    Node      -', platform.node())
-print('    Time      -', time, 'UTC', '\n')
-
-print('LIBRARY VERSIONS')
-print('    Python    -', platform.python_version(), 'on', platform.python_compiler())
-print('    Pytorch   -', torch.__version__)
-print('    CUDA      -', torch.version.cuda)
-print('    CUDNN     -', torch.backends.cudnn.version(), '\n', flush = True)
 
 # ---- OPTION PARSING ----
 
@@ -62,10 +43,13 @@ parser.add_argument('--get_min',    dest='get_min', default=False, action='store
 parser.add_argument('--metric',     type=str, default='dockQ',   help='Metric to be used. Options: irmsd, lrmsd, fnat, dockQ (default)')
 parser.add_argument('--dropout',    type=float, default=0.5, help='Dropout rate in last layer. When 0 replaced by batchnorm (default = 0.3)')
 
-
 arg = parser.parse_args()
-print('RUN PARAMETERS')
-print('    ', arg, '\n', flush=True)
+
+save_path = arg.out_folder+'/'+str(time)
+
+if not os.path.exists(save_path):
+    os.makedirs(save_path)
+
 
 # ---- DATA LOADING ----
 
@@ -81,15 +65,35 @@ testloader = data.DataLoader(testset, batch_size=arg.batch_size, shuffle=True, n
 
 num_batch = len(dataset)/arg.batch_size
 
-print('DATA PARAMETERS')
-print('    Test & train sizes: %d & %d -> %.1f' %(len(testset), len(dataset), 100*len(testset)/len(dataset)), '%', flush=True)
+# ---- PRINT INFORMATION ----
+with open(save_path+'/log.txt', 'a') as out_file:
 
-# ---- GET MINIMUM
+    print('ABOUT')
+    print('    Simplified PointNet for Protein-Protein Reaction', file=out_file)
+    print('    Lukas De Clercq, 2018, Netherlands eScience Center\n', file=out_file)
+    print('    See attached license', file=out_file)
 
-if arg.get_min:
-    minSize = min(dataset.getMin(), testset.getMin())
-    print('    Minimum pointcloud size:', minSize)
-print('')
+    print('RUNTIME INFORMATION')
+    print('    System    -', platform.system(), platform.release(), platform.machine(), file=out_file)
+    print('    Version   -', platform.version(), file=out_file)
+    print('    Node      -', platform.node(), file=out_file)
+    print('    Time      -', time, 'UTC', '\n', file=out_file)
+
+    print('LIBRARY VERSIONS')
+    print('    Python    -', platform.python_version(), 'on', platform.python_compiler(), file=out_file)
+    print('    Pytorch   -', torch.__version__, file=out_file)
+    print('    CUDA      -', torch.version.cuda, file=out_file)
+    print('    CUDNN     -', torch.backends.cudnn.version(), '\n', file=out_file)
+
+    print('RUN PARAMETERS')
+    print('    ', arg, '\n', file=out_file)
+
+    print('DATA PARAMETERS')
+    print('    Test & train sizes: %d & %d -> %.1f' %(len(testset), len(dataset), 100*len(testset)/len(dataset)), '%', file=out_file)
+
+    if arg.get_min:
+        minSize = min(dataset.getMin(), testset.getMin())
+        print('    Minimum pointcloud size:', minSize, '\n', flush=True, file=out_file)
 
 # ---- SET UP MODEL ----
 
@@ -185,12 +189,12 @@ for epoch in range(arg.num_epoch):
     # Early stopping
     if test_score > prev_test_score:
         early_stop_count += 1
-        if early_stop_count == 3:
+        if early_stop_count == 5:
             print('    Early stopping condition reached')
             break 
     else:
         early_stop_count = 0
-        saveModel(model, arg, str(time))
+        saveModel(model, save_path)
         prev_test_score = test_score
 
 # ---- REVERT TO BEST MODEL ----
@@ -210,10 +214,10 @@ ax.scatter(x2.data.cpu(),y2.data.cpu(), label='Train',s=1)
 ax.scatter(x1.data.cpu(),y1.data.cpu(), label='Test',s=1)
 ax.set_ylabel('Prediction')
 ax.set_xlabel('Truth')
-ax.set_xlim(xmin=0.0)
+ax.set_xlim(xmin=0.0) # All scores are > 0
 ax.set_ylim(ymin=0.0)
 ax.legend(loc='best')
-title = 'Test loss: %.5f' %prev_test_score
+title = 'Test loss: %.5f' %prev_test_score # Best known test score
 fig.suptitle(title)
 fig.set_size_inches(19.2, 10.8) # 1920 x 1080 when using 100 dpi
 fig.savefig('post-train.png', dpi=100)

@@ -1,4 +1,5 @@
 import torch
+import os
 
 # Get current learning rate from optimizer
 def get_lr(optimizer):
@@ -9,8 +10,8 @@ def get_lr(optimizer):
 
 # Save model
 
-def saveModel(model, arg):
-    torch.save(model.state_dict(), '%s/PPIPointNet.pth' % (arg.out_folder))
+def saveModel(model, path):
+    torch.save(model.state_dict(), '%s/PPIPointnet.pth' % (path))
 
 # favorHighLoss
 
