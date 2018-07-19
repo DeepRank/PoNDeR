@@ -211,7 +211,7 @@ with open(save_path+'/log.txt', 'a') as out_file:
 # ---- REVERT TO BEST MODEL ----
 
 print('Reverting to best known model (test loss = %.5f)\n' %prev_test_score)    
-model.load_state_dict(torch.load('%s/PPIPointNet.pth' % (arg.out_folder))) # Load best known configuration
+model.load_state_dict(torch.load('%s/PoNDeR.pth' % (save_path))) # Load best known configuration
 
 # ---- PLOTTING ----
 
