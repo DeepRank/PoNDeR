@@ -3,6 +3,9 @@ import sys
 import platform
 import datetime
 import argparse
+from timeit import default_timer as timer
+import numpy as np
+from pathlib import Path
 
 import torch
 import torch.nn as nn
@@ -16,8 +19,6 @@ if os.environ.get('DISPLAY','') == '':
     matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.axes as axs
-import numpy as np
-from pathlib import Path
 
 from PPIPointNet import PointNet, DualPointNet
 from evaluate import evaluateModel
@@ -146,9 +147,12 @@ print('WARNING: Train loss is with the model in eval mode, this alters dropout a
 print('         behaviour. Train loss can be expected to be worse under these conditions\n')
 
 early_stop_count = 0
+avg_time_per_epoch = 0
+
 
 # Main epoch loop
 for epoch in range(arg.num_epoch):
+    start = timer()
     avg_train_score = 0
 
     # Loss rate scheduling
@@ -187,6 +191,7 @@ for epoch in range(arg.num_epoch):
     test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA)
     print('E: %02d - Mean train loss = %.5f              ' %(epoch+1, avg_train_score/num_batch))
     print('E: %02d - Test loss = %.5f\n' %(epoch+1, test_score))
+    avg_time_per_epoch += (timer() - start)
 
     # Early stopping
     if test_score > prev_test_score:
@@ -198,6 +203,10 @@ for epoch in range(arg.num_epoch):
         early_stop_count = 0
         saveModel(model, save_path)
         prev_test_score = test_score
+
+avg_time_per_epoch = avg_time_per_epoch/arg.num_epoch
+with open(save_path+'/log.txt', 'a') as out_file:
+    print('Average time per epoch:', avg_time_per_epoch, file=out_file)
 
 # ---- REVERT TO BEST MODEL ----
 
