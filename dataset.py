@@ -4,16 +4,18 @@ import os
 import random
 import numpy as np
 import h5py
+import math
 
 # No more than one worker can be used for these types of dataset as HDF5 does not multithread appropriately
 
 class PDBset(data.Dataset):
-    def __init__(self, hdf5_file, num_points, group='train', metric='dockQ'):
+    def __init__(self, hdf5_file, num_points, group='train', metric='dockQ', log=False):
         self.hf = h5py.File(hdf5_file,'r')
         self.num_points = num_points
         self.group = self.hf[group]
         self.keys = list(self.group.keys())
         self.metric = metric
+        self.log = log
 
     def __len__(self):
         return len(self.keys)
@@ -22,6 +24,8 @@ class PDBset(data.Dataset):
         pc = self.group.get(self.keys[idx])
         mtrc = pc.attrs[self.metric]
         pc = samplePoints(np.array(pc), self.num_points)
+        if self.log:
+            mtrc = math.log(mtrc)
         return torch.from_numpy(pc), np.float32(mtrc)
 
     def getMin(self):
@@ -42,12 +46,13 @@ class PDBset(data.Dataset):
         return self.hf.attrs['feat_width'].item()
 
 class DualPDBset(data.Dataset):
-    def __init__(self, hdf5_file, num_points, group='train', metric='dockQ'):
+    def __init__(self, hdf5_file, num_points, group='train', metric='dockQ', log=False):
         self.hf = h5py.File(hdf5_file,'r')
         self.num_points = num_points
         self.group = self.hf[group]
         self.keys = list(self.group.keys())
         self.metric = metric
+        self.log = log
 
     def __len__(self):
         return len(self.keys)
@@ -62,6 +67,8 @@ class DualPDBset(data.Dataset):
         pcB = samplePoints(pcB, self.num_points)
 
         pc = np.concatenate((pcA, pcB), axis=0) # Concatenate to conform with pytorch API (nn.module takes only one input)
+        if self.log:
+            mtrc = math.log(mtrc)
 
         return torch.from_numpy(pc), np.float32(mtrc)
     
@@ -76,7 +83,7 @@ class DualPDBset(data.Dataset):
         return minSize
     
     def getFeatWidth(self):
-        return self.group.attrs['feat_width']
+        return self.group.attrs['feat_width'].item()
 
 # Zero concatenation, safe for maxpooling but not for avgpooling
 def samplePoints(pc, num_points):
