@@ -16,7 +16,7 @@ def saveModel(model, path):
 # favorHighLoss
 
 def favor_high_loss(input, target, size_average=True, reduce=True):
-    d = torch.abs((input - target)*target) # High inputs biased in loss
+    d = torch.abs((input - target)*(target+1)) # High inputs biased in loss
     if not reduce:
         return d
     return torch.mean(d) if size_average else torch.sum(d)
