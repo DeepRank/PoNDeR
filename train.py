@@ -45,6 +45,7 @@ parser.add_argument('--get_min',    dest='get_min', default=False, action='store
 parser.add_argument('--metric',     type=str, default='dockQ',   help='Metric to be used. Options: irmsd, lrmsd, fnat, dockQ (default)')
 parser.add_argument('--dropout',    type=float, default=0.5, help='Dropout rate in last layer. When 0 replaced by batchnorm (default = 0.5)')
 parser.add_argument('--log',        dest='log', default=False, action='store_true', help='Apply logarithm on metric')
+parser.add_argument('--patience',   type=int, default=5, help='Number of epochs to observe overfitting before early stopping')
 
 arg = parser.parse_args()
 
@@ -197,7 +198,7 @@ for epoch in range(arg.num_epoch):
     # Early stopping
     if test_score > prev_test_score:
         early_stop_count += 1
-        if early_stop_count == 5:
+        if early_stop_count == arg.patience:
             print('Early stopping condition reached')
             break 
     else:
