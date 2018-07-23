@@ -186,7 +186,9 @@ for epoch in range(arg.num_epoch):
             break 
 
         # Forward and backward pass
-        prediction = model(points).view(-1)
+        prediction = model(points)
+        if not arg.classification:
+            prediction = prediction.view(-1)
         loss = train_loss_func(prediction, target)
         avg_train_score += loss
         loss.backward()
