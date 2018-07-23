@@ -154,8 +154,8 @@ model.train()  # Set to training mode
 prev_test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA, classification=arg.classification)
 print('\nBefore training - Test loss = %.5f\n' %(prev_test_score))
 if arg.classification:
-        max_vals, max_indices = torch.max(x1)
-        acc = 100*(max_indices == y1.sum().data.numpy()/max_indices.size())[0]
+    max_vals, max_indices = torch.max(x1)
+    acc = 100*(max_indices == y1.sum().data.numpy()/max_indices.size())[0]
     print('                  Test accuracy = %.2f\%' %(acc))
 print('WARNING: Train loss is with the model in eval mode, this alters dropout and batchnorm')
 print('         behaviour. Train loss can be expected to be worse under these conditions\n')
