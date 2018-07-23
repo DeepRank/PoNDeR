@@ -101,7 +101,7 @@ if arg.get_min:
 
 # ---- SET UP MODEL ----
 
-print('Setting up model and getting baseline...\n')
+print('MODEL SET-UP\n')
 
 # Architecture selection
 
@@ -148,16 +148,16 @@ else:
     test_loss_func = FavorHighLoss(size_average=False)
 
 # ---- MODEL TRAINING ----
-
+print('\nTRAINING')
 model.train()  # Set to training mode
 
 prev_test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA, classification=arg.classification)
-print('\nBefore training - Test loss = %.5f' %(prev_test_score))
+print('    Before training - Test loss = %.5f' %(prev_test_score))
 if arg.classification:
     acc = calcAccuracy(x1,y1)
-    print('                  Test accuracy = %.2f' %(acc), '%')
-print('\nWARNING: Train loss is with the model in eval mode, this alters dropout and batchnorm')
-print('         behaviour. Train loss can be expected to be worse under these conditions\n')
+    print('                      Test accuracy = %.2f' %(acc), '%')
+print('\n    WARNING: Train loss is with the model in eval mode, this alters dropout and batchnorm')
+print('             behaviour. Train loss can be expected to be worse under these conditions')
 
 early_stop_count = 0
 avg_time_per_epoch = 0
@@ -205,37 +205,40 @@ for epoch in range(arg.num_epoch):
     # This section runs at the end of each batch
     test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA, classification=arg.classification)
     print('E: %02d - Mean train loss = %.5f              ' %(epoch+1, avg_train_score/num_batch))
-    print('E: %02d - Test loss = %.5f\n' %(epoch+1, test_score))
+    print('          Test loss = %.5f' %(test_score))
     if arg.classification:
         acc = calcAccuracy(x1,y1)
-        print('                  Test accuracy = %.2f' %(acc), '%')
+        print('          Test accuracy = %.2f' %(acc), '%')
+    print('')
     
     avg_time_per_epoch += (timer() - start)
 
     # Early stopping
-    if test_score > prev_test_score:
-        early_stop_count += 1
-        if early_stop_count == arg.patience:
-            print('Early stopping condition reached')
-            break 
-    else:
-        early_stop_count = 0
-        saveModel(model, save_path)
-        prev_test_score = test_score
+    if arg.patience > 0: # When 0 or smaller, run until end of epochs
+        if test_score > prev_test_score:
+            early_stop_count += 1
+            if early_stop_count == arg.patience:
+                print('Early stopping condition reached')
+                break 
+        else:
+            early_stop_count = 0
+            saveModel(model, save_path)
+            prev_test_score = test_score
 
 avg_time_per_epoch = avg_time_per_epoch/arg.num_epoch
 print('Average time per epoch:', avg_time_per_epoch)
 
 # ---- REVERT TO BEST MODEL ----
-
-print('Reverting to best known model (test loss = %.5f)\n' %prev_test_score)    
-model.load_state_dict(torch.load('%s/PoNDeR.pth' % (save_path))) # Load best known configuration
+if arg.patience > 0:
+    print('Load best known configuration (test loss = %.5f)\n' %prev_test_score)    
+    model.load_state_dict(torch.load('%s/PoNDeR.pth' % (save_path))) # Load best known configuration
 
 # ---- PLOTTING ----
 
 print('Running eval on train set', end='\r')
 train_score,x2,y2 = evaluateModel(model, test_loss_func, dataloader, arg.dual, arg.CUDA, classification=arg.classification)
-print('Final train loss = %.5f' %(train_score))
+acc = calcAccuracy(x2,y2)
+print('Final train loss = %.5f, accuracy = %.2f' %(train_score, acc), '%')
 
 print('Creating plot...')
 fig, ax = plt.subplots()
