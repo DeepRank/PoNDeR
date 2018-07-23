@@ -100,7 +100,7 @@ class DualPDBset(data.Dataset):
         return minSize
     
     def getFeatWidth(self):
-        return self.group.attrs['feat_width'].item()
+        return self.hf.attrs['feat_width'].item()
 
 # Zero concatenation, safe for maxpooling but not for avgpooling
 def samplePoints(pc, num_points):
