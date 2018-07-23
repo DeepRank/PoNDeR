@@ -2,7 +2,7 @@ import torch
 from torch.autograd import Variable
 import torch.nn.functional as F
 
-def evaluateModel(model, loss_func, testloader, dual = False, CUDA = False):
+def evaluateModel(model, loss_func, testloader, dual=False, CUDA=False, classification=False):
     model.eval()  # Set to testing mode
     cnt = 0
     loss_sum = 0
@@ -14,7 +14,8 @@ def evaluateModel(model, loss_func, testloader, dual = False, CUDA = False):
         points = points.transpose(2, 1)
         if CUDA:
             points, target = points.cuda(), target.cuda()
-        prediction = model(points).view(-1)
+        if not classification:
+            prediction = model(points).view(-1)
         loss = loss_func(prediction, target)
         cnt += target.size(0)
         loss_sum += loss.data[0]
