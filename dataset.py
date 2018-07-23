@@ -36,20 +36,6 @@ class PDBset(data.Dataset):
             else:
                 mtrc = 1
         return torch.from_numpy(pc), mtrc
-
-    def getMin(self):
-        minSize = 100000000 # Hacky but works
-        for key in self.keys:
-            pc = np.array(self.group.get(key))
-            if len(pc) < minSize:
-                minSize = len(pc)
-        return minSize
-
-    def getLengths(self):
-        lengths = np.zeros(len(self.keys))
-        for key, i in self.keys:
-            lengths[i] = len(np.array(self.group.get(key)))
-        return lengths
     
     def getFeatWidth(self):
         return self.hf.attrs['feat_width'].item()
@@ -88,16 +74,6 @@ class DualPDBset(data.Dataset):
                 mtrc = 1
 
         return torch.from_numpy(pc), mtrc
-    
-    def getMin(self):
-        minSize = 100000000 # Hacky but works
-        for key in self.keys:
-            subgroup = self.group.get(key)
-            pcA = np.array(subgroup.get('A'))
-            pcB = np.array(subgroup.get('B'))
-            if min(len(pcA), len(pcB)) < minSize:
-                minSize = min(len(pcA), len(pcB))
-        return minSize
     
     def getFeatWidth(self):
         return self.hf.attrs['feat_width'].item()

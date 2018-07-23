@@ -41,7 +41,6 @@ parser.add_argument('--lr',         type=float, default=0.0001, help='Learning r
 parser.add_argument('--optimizer',  type=str, default='Adam', help='What optimizer to use. Options: Adam, SGD, SGD_cos')
 parser.add_argument('--avg_pool',   dest='avg_pool', default=False, action='store_true', help='Use average pooling after for feature pooling (instead of default max pooling)')
 parser.add_argument('--dual',       dest='dual', default=False, action='store_true', help='Use DualPointNet architecture')
-parser.add_argument('--get_min',    dest='get_min', default=False, action='store_true', help='Get minimum point cloud size')
 parser.add_argument('--metric',     type=str, default='dockQ',   help='Metric to be used. Options: irmsd, lrmsd, fnat, dockQ (default)')
 parser.add_argument('--dropout',    type=float, default=0.5, help='Dropout rate in last layer. When 0 replaced by batchnorm (default = 0.5)')
 parser.add_argument('--log',        dest='log', default=False, action='store_true', help='Apply logarithm on metric')
@@ -102,10 +101,6 @@ if arg.classification:
             targets.append(target)
     pos = 100*sum(targets)/len(targets)
     print('   Positive samples: %.1f' %(pos))
-
-if arg.get_min:
-    minSize = min(dataset.getMin(), testset.getMin())
-    print('    Minimum pointcloud size:', minSize, '\n', flush=True)
 
 # ---- SET UP MODEL ----
 
