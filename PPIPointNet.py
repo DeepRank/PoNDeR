@@ -62,7 +62,7 @@ class PointNet(nn.Module):
         if self.sigmoid:
             return F.sigmoid(x)
         else:
-            return F.relu(x)
+            return x
 
 class DualPointNet(nn.Module):
     def __init__(self, in_channels, num_points=250, avgPool=False, sigmoid=False, dropout=0.3):
@@ -96,4 +96,4 @@ class DualPointNet(nn.Module):
         if self.sigmoid:
             return F.sigmoid(x)
         else:
-            return F.relu(x)
+            return x

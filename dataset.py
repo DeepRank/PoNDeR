@@ -8,25 +8,34 @@ import math
 
 # No more than one worker can be used for these types of dataset as HDF5 does not multithread appropriately
 
+LOGCUTOFF = -3.73 # Cutoff for log
+
 class PDBset(data.Dataset):
-    def __init__(self, hdf5_file, num_points, group='train', metric='dockQ', log=False):
+    def __init__(self, hdf5_file, num_points, group='train', metric='dockQ', log=False, classification=False):
         self.hf = h5py.File(hdf5_file,'r')
         self.num_points = num_points
         self.group = self.hf[group]
         self.keys = list(self.group.keys())
         self.metric = metric
         self.log = log
+        self.classification = classification
 
     def __len__(self):
         return len(self.keys)
 
     def __getitem__(self, idx):
         pc = self.group.get(self.keys[idx])
-        mtrc = pc.attrs[self.metric]
+        mtrc = np.float32(pc.attrs[self.metric])
         pc = samplePoints(np.array(pc), self.num_points)
         if self.log:
             mtrc = math.log(mtrc)
-        return torch.from_numpy(pc), np.float32(mtrc)
+            cutoff = LOGCUTOFF
+        if self.classification:
+            if mtrc < cutoff:
+                mtrc = 0
+            else:
+                mtrc = 1
+        return torch.from_numpy(pc), mtrc
 
     def getMin(self):
         minSize = 100000000 # Hacky but works
@@ -46,13 +55,15 @@ class PDBset(data.Dataset):
         return self.hf.attrs['feat_width'].item()
 
 class DualPDBset(data.Dataset):
-    def __init__(self, hdf5_file, num_points, group='train', metric='dockQ', log=False):
+    def __init__(self, hdf5_file, num_points, group='train', metric='dockQ', log=False, classification=False):
         self.hf = h5py.File(hdf5_file,'r')
         self.num_points = num_points
         self.group = self.hf[group]
         self.keys = list(self.group.keys())
         self.metric = metric
         self.log = log
+        self.classification = classification
+
 
     def __len__(self):
         return len(self.keys)
@@ -61,7 +72,7 @@ class DualPDBset(data.Dataset):
         subgroup = self.group.get(self.keys[idx])
         pcA = np.array(subgroup.get('A'))
         pcB = np.array(subgroup.get('B'))
-        mtrc = subgroup.attrs[self.metric]
+        mtrc = np.float32(subgroup.attrs[self.metric])
 
         pcA = samplePoints(pcA, self.num_points)
         pcB = samplePoints(pcB, self.num_points)
@@ -69,8 +80,14 @@ class DualPDBset(data.Dataset):
         pc = np.concatenate((pcA, pcB), axis=0) # Concatenate to conform with pytorch API (nn.module takes only one input)
         if self.log:
             mtrc = math.log(mtrc)
+            cutoff = LOGCUTOFF
+        if self.classification:
+            if mtrc < cutoff:
+                mtrc = 0
+            else:
+                mtrc = 1
 
-        return torch.from_numpy(pc), np.float32(mtrc)
+        return torch.from_numpy(pc), mtrc
     
     def getMin(self):
         minSize = 100000000 # Hacky but works

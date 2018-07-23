@@ -46,6 +46,7 @@ parser.add_argument('--metric',     type=str, default='dockQ',   help='Metric to
 parser.add_argument('--dropout',    type=float, default=0.5, help='Dropout rate in last layer. When 0 replaced by batchnorm (default = 0.5)')
 parser.add_argument('--log',        dest='log', default=False, action='store_true', help='Apply logarithm on metric')
 parser.add_argument('--patience',   type=int, default=5, help='Number of epochs to observe overfitting before early stopping')
+parser.add_argument('--classification',dest='classification', default=False, action='store_true', help='Classification instead of regression')
 
 arg = parser.parse_args()
 
@@ -57,11 +58,11 @@ if not os.path.exists(save_path):
 # ---- DATA LOADING ----
 
 if arg.dual:
-    dataset = DualPDBset(hdf5_file=arg.data_path, group='train', num_points=arg.num_points, metric=arg.metric, log=arg.log)
-    testset = DualPDBset(hdf5_file=arg.data_path, group='test', num_points=arg.num_points, metric=arg.metric, log=arg.log)
+    dataset = DualPDBset(hdf5_file=arg.data_path, group='train', num_points=arg.num_points, metric=arg.metric, log=arg.log, classification=arg.classification)
+    testset = DualPDBset(hdf5_file=arg.data_path, group='test', num_points=arg.num_points, metric=arg.metric, log=arg.log, classification=arg.classification)
 else:
-    dataset = PDBset(hdf5_file=arg.data_path, group='train', num_points=arg.num_points, metric=arg.metric, log=arg.log)
-    testset = PDBset(hdf5_file=arg.data_path, group='test', num_points=arg.num_points, metric=arg.metric, log=arg.log)
+    dataset = PDBset(hdf5_file=arg.data_path, group='train', num_points=arg.num_points, metric=arg.metric, log=arg.log, classification=arg.classification)
+    testset = PDBset(hdf5_file=arg.data_path, group='test', num_points=arg.num_points, metric=arg.metric, log=arg.log, classification=arg.classification)
 
 dataloader = data.DataLoader(dataset, batch_size=arg.batch_size, shuffle=True, num_workers=1)
 testloader = data.DataLoader(testset, batch_size=arg.batch_size, shuffle=True, num_workers=1)
@@ -106,7 +107,7 @@ print('Setting up model and getting baseline...\n')
 
 # Architecture selection
 
-if arg.metric == 'dockQ':
+if arg.metric == 'dockQ' and not arg.classification:
     sigmoid = True
 else:
     sigmoid = False
@@ -136,8 +137,15 @@ elif arg.optimizer == 'SGD' or arg.optimizer == 'SGD_cos':
 scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, num_batch)
 
 # Loss function
-train_loss_func = FavorHighLoss()
-test_loss_func = FavorHighLoss(size_average=False)
+if arg.classification:
+    train_loss_func = nn.CrossEntropyLoss()
+    test_loss_func = nn.CrossEntropyLoss(size_average=False)
+elif arg.log:
+    train_loss_func = nn.L1Loss()
+    test_loss_func = nn.L1Loss(size_average=False)
+else:
+    train_loss_func = FavorHighLoss()
+    test_loss_func = FavorHighLoss(size_average=False)
 
 # ---- MODEL TRAINING ----
 
