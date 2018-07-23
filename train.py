@@ -98,9 +98,10 @@ if arg.classification:
     targets = []
     for data in testloader:
             _, target = data
-            targets.append(target)
+            targets.append(np.array(target))
+    targets = np.concatenate(targets)
     pos = 100*sum(targets)/len(targets)
-    print('   Positive samples: %.1f' %(pos))
+    print('    Positive samples: %.1f' %(pos), '%\n')
 
 # ---- SET UP MODEL ----
 
