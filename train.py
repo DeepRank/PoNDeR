@@ -151,7 +151,7 @@ else:
 
 model.train()  # Set to training mode
 
-prev_test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA)
+prev_test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA, classification=arg.classification)
 print('\nBefore training - Test loss = %.5f\n' %(prev_test_score))
 print('WARNING: Train loss is with the model in eval mode, this alters dropout and batchnorm')
 print('         behaviour. Train loss can be expected to be worse under these conditions\n')
@@ -198,7 +198,7 @@ for epoch in range(arg.num_epoch):
             scheduler.step()
 
     # This section runs at the end of each batch
-    test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA)
+    test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA, classification=arg.classification)
     print('E: %02d - Mean train loss = %.5f              ' %(epoch+1, avg_train_score/num_batch))
     print('E: %02d - Test loss = %.5f\n' %(epoch+1, test_score))
     avg_time_per_epoch += (timer() - start)
@@ -226,7 +226,7 @@ model.load_state_dict(torch.load('%s/PoNDeR.pth' % (save_path))) # Load best kno
 # ---- PLOTTING ----
 
 print('Running eval on train set', end='\r')
-train_score,x2,y2 = evaluateModel(model, test_loss_func, dataloader, arg.dual, arg.CUDA)
+train_score,x2,y2 = evaluateModel(model, test_loss_func, dataloader, arg.dual, arg.CUDA, classification=arg.classification)
 print('Final train loss = %.5f' %(train_score))
 
 print('Creating plot...')

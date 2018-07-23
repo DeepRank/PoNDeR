@@ -14,8 +14,9 @@ def evaluateModel(model, loss_func, testloader, dual=False, CUDA=False, classifi
         points = points.transpose(2, 1)
         if CUDA:
             points, target = points.cuda(), target.cuda()
+        prediction = model(points)
         if not classification:
-            prediction = model(points).view(-1)
+            prediction = prediction.view(-1)
         loss = loss_func(prediction, target)
         cnt += target.size(0)
         loss_sum += loss.data[0]
