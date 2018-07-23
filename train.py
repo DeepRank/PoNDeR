@@ -23,7 +23,7 @@ import matplotlib.axes as axs
 from PPIPointNet import PointNet, DualPointNet
 from evaluate import evaluateModel
 from dataset import PDBset, DualPDBset
-from utils import get_lr, saveModel, FavorHighLoss
+from utils import get_lr, saveModel, FavorHighLoss, calcAccuracy
 
 time = datetime.datetime.now()
 
@@ -152,12 +152,11 @@ else:
 model.train()  # Set to training mode
 
 prev_test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA, classification=arg.classification)
-print('\nBefore training - Test loss = %.5f\n' %(prev_test_score))
+print('\nBefore training - Test loss = %.5f' %(prev_test_score))
 if arg.classification:
-    max_vals, max_indices = torch.max(x1)
-    acc = 100*(max_indices == y1.sum().data.numpy()/max_indices.size())[0]
-    print('                  Test accuracy = %.2f\%' %(acc))
-print('WARNING: Train loss is with the model in eval mode, this alters dropout and batchnorm')
+    acc = calcAccuracy(x1,y1)
+    print('                  Test accuracy = %.2f' %(acc), '%')
+print('\nWARNING: Train loss is with the model in eval mode, this alters dropout and batchnorm')
 print('         behaviour. Train loss can be expected to be worse under these conditions\n')
 
 early_stop_count = 0
@@ -208,9 +207,8 @@ for epoch in range(arg.num_epoch):
     print('E: %02d - Mean train loss = %.5f              ' %(epoch+1, avg_train_score/num_batch))
     print('E: %02d - Test loss = %.5f\n' %(epoch+1, test_score))
     if arg.classification:
-        max_vals, max_indices = torch.max(x1)
-        acc = 100*(max_indices == y1.sum().data.numpy()/max_indices.size())[0]
-    print('E: %02d - Test accuracy = %.2f\%' %(epoch+1, acc))
+        acc = calcAccuracy(x1,y1)
+        print('                  Test accuracy = %.2f' %(acc), '%')
     
     avg_time_per_epoch += (timer() - start)
 

@@ -30,3 +30,10 @@ class FavorHighLoss(torch.nn.Module):
     def forward(self, input, target):
         assert not target.requires_grad
         return favor_high_loss(input, target, size_average=self.size_average, reduce=self.reduce)
+
+def calcAccuracy(x,y):
+    x.cpu()
+    y.cpu()
+    _, max_indices = torch.max(y,1)
+    acc = 100*(max_indices == x).sum().data/max_indices.size()[0]
+    return acc
