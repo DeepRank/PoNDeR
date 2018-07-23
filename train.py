@@ -101,11 +101,11 @@ if arg.classification:
             targets.append(np.array(target))
     targets = np.concatenate(targets)
     pos = 100*sum(targets)/len(targets)
-    print('    Positive samples: %.1f' %(pos), '%\n')
+    print('    Positive samples: %.1f' %(pos), '%')
 
 # ---- SET UP MODEL ----
 
-print('MODEL SET-UP\n')
+print('\nMODEL SET-UP')
 
 # Architecture selection
 
@@ -161,7 +161,7 @@ if arg.classification:
     acc = calcAccuracy(x1,y1)
     print('                      Test accuracy = %.2f' %(acc), '%')
 print('\n    WARNING: Train loss is with the model in eval mode, this alters dropout and batchnorm')
-print('             behaviour. Train loss can be expected to be worse under these conditions')
+print('             behaviour. Train loss can be expected to be worse under these conditions\n')
 
 early_stop_count = 0
 avg_time_per_epoch = 0
@@ -209,10 +209,10 @@ for epoch in range(arg.num_epoch):
     # This section runs at the end of each batch
     test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA, classification=arg.classification)
     print('E: %02d - Mean train loss = %.5f              ' %(epoch+1, avg_train_score/num_batch))
-    print('          Test loss = %.5f' %(test_score))
+    print('        Test loss = %.5f' %(test_score))
     if arg.classification:
         acc = calcAccuracy(x1,y1)
-        print('          Test accuracy = %.2f' %(acc), '%')
+        print('        Test accuracy = %.2f' %(acc), '%')
     print('')
     
     avg_time_per_epoch += (timer() - start)
@@ -230,7 +230,7 @@ for epoch in range(arg.num_epoch):
             prev_test_score = test_score
 
 avg_time_per_epoch = avg_time_per_epoch/arg.num_epoch
-print('Average time per epoch:', avg_time_per_epoch)
+print('Average time per epoch: %.2fs' %avg_time_per_epoch)
 
 # ---- REVERT TO BEST MODEL ----
 if arg.patience > 0:
