@@ -34,7 +34,7 @@ class PointNetFeat(nn.Module):
 # Feature to value mapping
 
 class PointNet(nn.Module):
-    def __init__(self, in_channels, num_points=250, avgPool=False, sigmoid=False, dropout=0.3):
+    def __init__(self, in_channels, num_points=250, avgPool=False, sigmoid=False, dropout=0.3, classification=False):
         super(PointNet, self).__init__()
 
         self.sigmoid = sigmoid
@@ -44,7 +44,10 @@ class PointNet(nn.Module):
 
         self.lin1 = nn.Linear(1024, 512)
         self.lin2 = nn.Linear(512, 256)
-        self.lin3 = nn.Linear(256, 1)
+        if classification:
+            self.lin3 = nn.Linear(256, 2)
+        else:
+            self.lin3 = nn.Linear(256, 1)
 
         self.bn1 = nn.BatchNorm1d(512)
         if dropout == 0:
@@ -65,7 +68,7 @@ class PointNet(nn.Module):
             return x
 
 class DualPointNet(nn.Module):
-    def __init__(self, in_channels, num_points=250, avgPool=False, sigmoid=False, dropout=0.3):
+    def __init__(self, in_channels, num_points=250, avgPool=False, sigmoid=False, dropout=0.3, classification=False):
         super(DualPointNet, self).__init__()
 
         self.sigmoid = sigmoid
@@ -75,7 +78,10 @@ class DualPointNet(nn.Module):
 
         self.lin1 = nn.Linear(2048, 512)
         self.lin2 = nn.Linear(512, 256)
-        self.lin3 = nn.Linear(256, 1)
+        if classification:
+            self.lin3 = nn.Linear(256, 2)
+        else:
+            self.lin3 = nn.Linear(256, 1)
 
         self.bn1 = nn.BatchNorm1d(512)
         if dropout == 0:
