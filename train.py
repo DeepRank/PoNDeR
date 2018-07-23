@@ -95,6 +95,14 @@ print('')
 print('DATA PARAMETERS')
 print('    Test & train sizes: %d & %d -> %.1f' %(len(testset), len(dataset), 100*len(testset)/len(dataset)), '%')
 
+if arg.classification:
+    targets = []
+    for data in testloader:
+            _, target = data
+            targets.append(target)
+    pos = 100*sum(targets)/len(targets)
+    print('   Positive samples: %.1f' %(pos))
+
 if arg.get_min:
     minSize = min(dataset.getMin(), testset.getMin())
     print('    Minimum pointcloud size:', minSize, '\n', flush=True)
@@ -115,7 +123,7 @@ if arg.dual:
 else:
     net = PointNet(num_points=arg.num_points, in_channels=dataset.getFeatWidth(), avgPool=arg.avg_pool, sigmoid=sigmoid, dropout=arg.dropout, classification=arg.classification)
 
-# GPU  & GPu parallellization
+# GPU  & GPU parallellization
 if arg.CUDA:
     net.cuda()
     model = torch.nn.DataParallel(net) 
