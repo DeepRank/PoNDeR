@@ -153,6 +153,10 @@ model.train()  # Set to training mode
 
 prev_test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA, classification=arg.classification)
 print('\nBefore training - Test loss = %.5f\n' %(prev_test_score))
+if arg.classification:
+        max_vals, max_indices = torch.max(x1)
+        acc = 100*(max_indices == y1.sum().data.numpy()/max_indices.size())[0]
+    print('                  Test accuracy = %.2f\%' %(acc))
 print('WARNING: Train loss is with the model in eval mode, this alters dropout and batchnorm')
 print('         behaviour. Train loss can be expected to be worse under these conditions\n')
 
@@ -203,6 +207,11 @@ for epoch in range(arg.num_epoch):
     test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA, classification=arg.classification)
     print('E: %02d - Mean train loss = %.5f              ' %(epoch+1, avg_train_score/num_batch))
     print('E: %02d - Test loss = %.5f\n' %(epoch+1, test_score))
+    if arg.classification:
+        max_vals, max_indices = torch.max(x1)
+        acc = 100*(max_indices == y1.sum().data.numpy()/max_indices.size())[0]
+    print('E: %02d - Test accuracy = %.2f\%' %(epoch+1, acc))
+    
     avg_time_per_epoch += (timer() - start)
 
     # Early stopping
@@ -217,8 +226,7 @@ for epoch in range(arg.num_epoch):
         prev_test_score = test_score
 
 avg_time_per_epoch = avg_time_per_epoch/arg.num_epoch
-with open(save_path+'/log.txt', 'a') as out_file:
-    print('Average time per epoch:', avg_time_per_epoch)
+print('Average time per epoch:', avg_time_per_epoch)
 
 # ---- REVERT TO BEST MODEL ----
 
