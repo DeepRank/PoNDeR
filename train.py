@@ -70,36 +70,34 @@ testloader = data.DataLoader(testset, batch_size=arg.batch_size, shuffle=True, n
 num_batch = len(dataset)/arg.batch_size
 
 # ---- PRINT INFORMATION ----
-with open(save_path+'/log.txt', 'a') as out_file:
+print('ABOUT')
+print('    Simplified PointNet for Protein-Protein Reaction')
+print('    Lukas De Clercq, 2018, Netherlands eScience Center')
+print('    See attached license\n')
 
-    print('ABOUT', file=out_file)
-    print('    Simplified PointNet for Protein-Protein Reaction', file=out_file)
-    print('    Lukas De Clercq, 2018, Netherlands eScience Center', file=out_file)
-    print('    See attached license\n', file=out_file)
+print('RUNTIME INFORMATION')
+print('    System    -', platform.system(), platform.release(), platform.machine())
+print('    Version   -', platform.version())
+print('    Node      -', platform.node())
+print('    Time      -', time, 'UTC', '\n')
 
-    print('RUNTIME INFORMATION', file=out_file)
-    print('    System    -', platform.system(), platform.release(), platform.machine(), file=out_file)
-    print('    Version   -', platform.version(), file=out_file)
-    print('    Node      -', platform.node(), file=out_file)
-    print('    Time      -', time, 'UTC', '\n', file=out_file)
+print('LIBRARY VERSIONS')
+print('    Python    -', platform.python_version(), 'on', platform.python_compiler())
+print('    Pytorch   -', torch.__version__)
+print('    CUDA      -', torch.version.cuda)
+print('    CUDNN     -', torch.backends.cudnn.version(), '\n')
 
-    print('LIBRARY VERSIONS', file=out_file)
-    print('    Python    -', platform.python_version(), 'on', platform.python_compiler(), file=out_file)
-    print('    Pytorch   -', torch.__version__, file=out_file)
-    print('    CUDA      -', torch.version.cuda, file=out_file)
-    print('    CUDNN     -', torch.backends.cudnn.version(), '\n', file=out_file)
+print('RUN PARAMETERS')
+for a in vars(arg):
+    print('    ', a, getattr(arg, a))
+print('')
 
-    print('RUN PARAMETERS', file=out_file)
-    for a in vars(arg):
-        print('    ', a, getattr(arg, a), file=out_file)
-    print('')
+print('DATA PARAMETERS')
+print('    Test & train sizes: %d & %d -> %.1f' %(len(testset), len(dataset), 100*len(testset)/len(dataset)), '%')
 
-    print('DATA PARAMETERS', file=out_file)
-    print('    Test & train sizes: %d & %d -> %.1f' %(len(testset), len(dataset), 100*len(testset)/len(dataset)), '%', file=out_file)
-
-    if arg.get_min:
-        minSize = min(dataset.getMin(), testset.getMin())
-        print('    Minimum pointcloud size:', minSize, '\n', flush=True, file=out_file)
+if arg.get_min:
+    minSize = min(dataset.getMin(), testset.getMin())
+    print('    Minimum pointcloud size:', minSize, '\n', flush=True)
 
 # ---- SET UP MODEL ----
 
@@ -123,6 +121,8 @@ if arg.CUDA:
     model = torch.nn.DataParallel(net) 
 else:
     model = net
+
+print(model)
 
 # Model loading (continued/transfer learning)
 if arg.model != '':
@@ -152,7 +152,7 @@ else:
 model.train()  # Set to training mode
 
 prev_test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA)
-print('Before training - Test loss = %.5f\n' %(prev_test_score))
+print('\nBefore training - Test loss = %.5f\n' %(prev_test_score))
 print('WARNING: Train loss is with the model in eval mode, this alters dropout and batchnorm')
 print('         behaviour. Train loss can be expected to be worse under these conditions\n')
 
@@ -216,7 +216,7 @@ for epoch in range(arg.num_epoch):
 
 avg_time_per_epoch = avg_time_per_epoch/arg.num_epoch
 with open(save_path+'/log.txt', 'a') as out_file:
-    print('Average time per epoch:', avg_time_per_epoch, file=out_file)
+    print('Average time per epoch:', avg_time_per_epoch)
 
 # ---- REVERT TO BEST MODEL ----
 
