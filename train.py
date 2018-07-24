@@ -210,7 +210,7 @@ for epoch in range(arg.num_epoch):
         acc = calcAccuracy(x1.cpu().data,y1.cpu().data)
         print('        Test accuracy = %.2f' %(acc), '%\n')
     else: 
-        r2 = sklearn.metrics.r2_score(x1.cpu().data, x2.cpu().data)
+        r2 = sklearn.metrics.r2_score(x1.cpu().data, y1.cpu().data)
         print('        Test R2 = %.2f' %(r2), '\n')
     
     avg_time_per_epoch += (timer() - start)
