@@ -9,12 +9,10 @@ def get_lr(optimizer):
     return lr
 
 # Save model
-
 def saveModel(model, path):
     torch.save(model.state_dict(), '%s/PoNDeR.pth' % (path))
 
 # favorHighLoss
-
 def favor_high_loss(input, target, size_average=True, reduce=True):
     d = torch.abs(((input - target)**2)*(target+1)) # High inputs biased in loss
     if not reduce:
