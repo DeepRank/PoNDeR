@@ -236,7 +236,8 @@ if arg.patience > 0:
 
 print('Running eval on train set', end='\r')
 train_score,x2,y2 = evaluateModel(model, test_loss_func, dataloader, arg.dual, arg.CUDA, classification=arg.classification)
-acc = calcAccuracy(x2,y2)
+if arg.classification:
+    acc = calcAccuracy(x2,y2)
 print('Final train loss = %.5f, accuracy = %.2f' %(train_score, acc), '%')
 
 if not arg.classification:
