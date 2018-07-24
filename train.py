@@ -6,6 +6,7 @@ import argparse
 from timeit import default_timer as timer
 import numpy as np
 from pathlib import Path
+import sklearn
 
 import torch
 import torch.nn as nn
@@ -207,8 +208,10 @@ for epoch in range(arg.num_epoch):
     print('        Test loss = %.5f' %(test_score))
     if arg.classification:
         acc = calcAccuracy(x1.cpu().data,y1.cpu().data)
-        print('        Test accuracy = %.2f' %(acc), '%')
-    print('')
+        print('        Test accuracy = %.2f' %(acc), '%\n')
+    else: 
+        r2 = sklearn.metrics.r2_score(x1.cpu().data, x2.cpu().data)
+        print('        Test R2 = %.2f' %(r2), '\n')
     
     avg_time_per_epoch += (timer() - start)
 
@@ -245,7 +248,7 @@ y2 = y2.cpu().data
 print('Final train loss = %.5f' %(train_score))
 if arg.classification:
     acc = calcAccuracy(x2,y2)
-    print('        Accuracy = %.2f' %(acc), '%')
+    print('  Train accuracy = %.2f' %(acc), '%')
 
 if arg.classification:
     print('Creating confusion matrix...')
