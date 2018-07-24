@@ -36,7 +36,7 @@ class PDBset(data.Dataset):
                 mtrc = 0
             else:
                 mtrc = 1
-        return torch.from_numpy(pc), mtrc
+        return torch.from_numpy(pc), np.float32(mtrc)
     
     def getFeatWidth(self):
         return self.hf.attrs['feat_width'].item()
@@ -76,7 +76,7 @@ class DualPDBset(data.Dataset):
             else:
                 mtrc = 1
 
-        return torch.from_numpy(pc), mtrc
+        return torch.from_numpy(pc), np.float32(mtrc)
     
     def getFeatWidth(self):
         return self.hf.attrs['feat_width'].item()
