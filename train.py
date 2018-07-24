@@ -254,6 +254,6 @@ if arg.classification:
     plotConfusionMatrix(mat, save_path)
 else: # Regression
     print('Creating plot...')
-    plotScatter(x1, y1, x2, y2, prev_test_score, save_path)
+    plotScatter(x1, y1, x2, y2, save_path, not arg.log)
 
 print('Done! All files avaialable in', save_path)
