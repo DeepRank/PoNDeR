@@ -9,6 +9,7 @@ import math
 # No more than one worker can be used for these types of dataset as HDF5 does not multithread appropriately
 
 LOGCUTOFF = -3.73 # Cutoff for log
+NORMCUTOFF = 0.2
 
 class PDBset(data.Dataset):
     def __init__(self, hdf5_file, num_points, group='train', metric='dockQ', log=False, classification=False):
@@ -67,6 +68,8 @@ class DualPDBset(data.Dataset):
         if self.log:
             mtrc = math.log(mtrc)
             cutoff = LOGCUTOFF
+        else:
+            cutoff = NORMCUTOFF
         if self.classification:
             if mtrc < cutoff:
                 mtrc = 0
