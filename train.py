@@ -14,16 +14,11 @@ import torch.optim as optim
 import torch.utils.data as data
 from torch.autograd import Variable
 
-import matplotlib
-if os.environ.get('DISPLAY','') == '':
-    matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-import matplotlib.axes as axs
-
 from PPIPointNet import PointNet, DualPointNet
 from evaluate import evaluateModel
 from dataset import PDBset, DualPDBset
 from utils import get_lr, saveModel, FavorHighLoss, calcAccuracy
+from plotLoss import scatter
 
 time = datetime.datetime.now()
 
@@ -244,17 +239,6 @@ train_score,x2,y2 = evaluateModel(model, test_loss_func, dataloader, arg.dual, a
 acc = calcAccuracy(x2,y2)
 print('Final train loss = %.5f, accuracy = %.2f' %(train_score, acc), '%')
 
-print('Creating plot...')
-fig, ax = plt.subplots()
-ax.scatter(x2.data.cpu(),y2.data.cpu(), label='Train',s=1)
-ax.scatter(x1.data.cpu(),y1.data.cpu(), label='Test',s=1)
-ax.set_ylabel('Prediction')
-ax.set_xlabel('Truth')
-ax.set_xlim(xmin=0.0) # All scores are > 0
-ax.set_ylim(ymin=0.0)
-ax.legend(loc='best')
-title = 'Test loss: %.5f' %prev_test_score # Best known test score
-fig.suptitle(title)
-fig.set_size_inches(19.2, 10.8) # 1920 x 1080 when using 100 dpi
-figname = save_path + '/post-train.png'
-fig.savefig(figname, dpi=100)
+if not arg.classification:
+    print('Creating plot...')
+    scatter(x1.data.cpu(), y1.data.cpu(), x2.data.cpu(), y2.data.cpu(), prev_test_score, save_path)
