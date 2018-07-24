@@ -28,11 +28,3 @@ class FavorHighLoss(torch.nn.Module):
     def forward(self, input, target):
         assert not target.requires_grad
         return favor_high_loss(input, target, size_average=self.size_average, reduce=self.reduce)
-
-# Returns classification accuracy in percent
-def calcAccuracy(x,y):
-    x = x.cpu().data
-    y = y.cpu().data
-    _, max_indices = torch.max(y,1)
-    acc = 100*(max_indices == x).sum()/len(x)
-    return acc

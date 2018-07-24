@@ -15,10 +15,10 @@ import torch.utils.data as data
 from torch.autograd import Variable
 
 from PPIPointNet import PointNet, DualPointNet
-from evaluate import evaluateModel
+from evaluate import evaluateModel, calcAccuracy, calcConfusionMatrix
 from dataset import PDBset, DualPDBset
-from utils import get_lr, saveModel, FavorHighLoss, calcAccuracy
-from plotLoss import scatter
+from utils import get_lr, saveModel, FavorHighLoss
+from plotLoss import plotScatter, plotConfusionMatrix
 
 time = datetime.datetime.now()
 
@@ -236,11 +236,24 @@ if arg.patience > 0:
 
 print('Running eval on train set', end='\r')
 train_score,x2,y2 = evaluateModel(model, test_loss_func, dataloader, arg.dual, arg.CUDA, classification=arg.classification)
+
+x1 = x1.cpu().data
+y1 = y1.cpu().data
+x2 = x2.cpu().data
+y2 = y2.cpu().data
+
 print('Final train loss = %.5f' %(train_score))
 if arg.classification:
     acc = calcAccuracy(x2,y2)
     print('        Accuracy = %.2f' %(acc), '%')
 
-if not arg.classification:
+if arg.classification:
+    print('Creating confusion matrix...')
+    mat = calcConfusionMatrix(x2,y2)
+    print(mat)
+    plotConfusionMatrix(mat, save_path)
+else: # Regression
     print('Creating plot...')
-    scatter(x1.data.cpu(), y1.data.cpu(), x2.data.cpu(), y2.data.cpu(), prev_test_score, save_path)
+    plotScatter(x1, y1, x2, y2, prev_test_score, save_path)
+
+print('Done! All files avaialable in', save_path)

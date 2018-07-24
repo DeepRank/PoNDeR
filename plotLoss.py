@@ -4,8 +4,10 @@ if os.environ.get('DISPLAY','') == '':
     matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.axes as axs
+import seaborn as sn
+import pandas as pd
 
-def scatter(x1, y1, x2, y2, test_score, save_path):
+def plotScatter(x1, y1, x2, y2, test_score, save_path):
     fig, ax = plt.subplots()
     ax.scatter(x2,y2, label='Train',s=1)
     ax.scatter(x1,y1, label='Test' ,s=1)
@@ -16,6 +18,12 @@ def scatter(x1, y1, x2, y2, test_score, save_path):
     ax.legend(loc='best')
     title = 'Test loss: %.5f' %test_score # Best known test score
     fig.suptitle(title)
-    fig.set_size_inches(16, 9)
-    figname = save_path + '/post-train.png'
-    fig.savefig(figname, dpi=25)
+    fig.set_size_inches(5, 5)
+    figname = save_path + '/scatter.png'
+    fig.savefig(figname, dpi=100)
+
+def plotConfusionMatrix(matrix, save_path):
+    plt.figure(figsize = (5,5))
+    sn.heatmap(matrix, annot=True)
+    figname = save_path + '/matrix.png'
+    plt.savefig(figname, dpi=100)
