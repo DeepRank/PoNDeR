@@ -153,7 +153,7 @@ model.train()  # Set to training mode
 prev_test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA, classification=arg.classification)
 print('    Before training - Test loss = %.5f' %(prev_test_score))
 if arg.classification:
-    acc = calcAccuracy(x1,y1)
+    acc = calcAccuracy(x1.cpu().data,y1.cpu().data)
     print('                      Test accuracy = %.2f' %(acc), '%')
 print('\n    WARNING: Train loss is with the model in eval mode, this alters dropout and batchnorm')
 print('             behaviour. Train loss can be expected to be worse under these conditions\n')
@@ -206,7 +206,7 @@ for epoch in range(arg.num_epoch):
     print('E: %02d - Mean train loss = %.5f              ' %(epoch+1, avg_train_score/num_batch))
     print('        Test loss = %.5f' %(test_score))
     if arg.classification:
-        acc = calcAccuracy(x1,y1)
+        acc = calcAccuracy(x1.cpu().data,y1.cpu().data)
         print('        Test accuracy = %.2f' %(acc), '%')
     print('')
     
