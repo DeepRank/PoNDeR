@@ -8,17 +8,17 @@ import math
 
 # No more than one worker can be used for these types of dataset as HDF5 does not multithread appropriately
 
-LOGCUTOFF = -3.73 # Cutoff for log
+ROOTCUTOFF = -3.73 # Cutoff for root
 NORMCUTOFF = 0.2
 
 class PDBset(data.Dataset):
-    def __init__(self, hdf5_file, num_points, group='train', metric='dockQ', log=False, classification=False):
+    def __init__(self, hdf5_file, num_points, group='train', metric='dockQ', root=False, classification=False):
         self.hf = h5py.File(hdf5_file,'r')
         self.num_points = num_points
         self.group = self.hf[group]
         self.keys = list(self.group.keys())
         self.metric = metric
-        self.log = log
+        self.root = root
         self.classification = classification
 
     def __len__(self):
@@ -28,9 +28,12 @@ class PDBset(data.Dataset):
         pc = self.group.get(self.keys[idx])
         mtrc = np.float32(pc.attrs[self.metric])
         pc = samplePoints(np.array(pc), self.num_points)
-        if self.log:
-            mtrc = math.log(mtrc)
-            cutoff = LOGCUTOFF
+        if self.root:
+            mtrc = math.sqrt(mtrc)
+            cutoff = ROOTCUTOFF
+        else:
+            cutoff = NORMCUTOFF
+            
         if self.classification:
             if mtrc < cutoff:
                 mtrc = 0
@@ -42,13 +45,13 @@ class PDBset(data.Dataset):
         return self.hf.attrs['feat_width'].item()
 
 class DualPDBset(data.Dataset):
-    def __init__(self, hdf5_file, num_points, group='train', metric='dockQ', log=False, classification=False):
+    def __init__(self, hdf5_file, num_points, group='train', metric='dockQ', root=False, classification=False):
         self.hf = h5py.File(hdf5_file,'r')
         self.num_points = num_points
         self.group = self.hf[group]
         self.keys = list(self.group.keys())
         self.metric = metric
-        self.log = log
+        self.root = root
         self.classification = classification
 
 
@@ -65,11 +68,12 @@ class DualPDBset(data.Dataset):
         pcB = samplePoints(pcB, self.num_points)
 
         pc = np.concatenate((pcA, pcB), axis=0) # Concatenate to conform with pytorch API (nn.module takes only one input)
-        if self.log:
-            mtrc = math.log(mtrc)
-            cutoff = LOGCUTOFF
+        if self.root:
+            mtrc = math.sqrt(mtrc)
+            cutoff = ROOTCUTOFF
         else:
             cutoff = NORMCUTOFF
+
         if self.classification:
             if mtrc < cutoff:
                 mtrc = 0

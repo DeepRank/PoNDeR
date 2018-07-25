@@ -39,7 +39,7 @@ parser.add_argument('--avg_pool',   dest='avg_pool', default=False, action='stor
 parser.add_argument('--dual',       dest='dual', default=False, action='store_true', help='Use DualPointNet architecture')
 parser.add_argument('--metric',     type=str, default='dockQ',   help='Metric to be used. Options: irmsd, lrmsd, fnat, dockQ (default)')
 parser.add_argument('--dropout',    type=float, default=0.5, help='Dropout rate in last layer. When 0 replaced by batchnorm (default = 0.5)')
-parser.add_argument('--log',        dest='log', default=False, action='store_true', help='Apply logarithm on metric')
+parser.add_argument('--root',       dest='root', default=False, action='store_true', help='Apply square root on metric')
 parser.add_argument('--patience',   type=int, default=5, help='Number of epochs to observe overfitting before early stopping')
 parser.add_argument('--classification',dest='classification', default=False, action='store_true', help='Classification instead of regression')
 
@@ -53,11 +53,11 @@ if not os.path.exists(save_path):
 # ---- DATA LOADING ----
 
 if arg.dual:
-    dataset = DualPDBset(hdf5_file=arg.data_path, group='train', num_points=arg.num_points, metric=arg.metric, log=arg.log, classification=arg.classification)
-    testset = DualPDBset(hdf5_file=arg.data_path, group='test', num_points=arg.num_points, metric=arg.metric, log=arg.log, classification=arg.classification)
+    dataset = DualPDBset(hdf5_file=arg.data_path, group='train', num_points=arg.num_points, metric=arg.metric, root=arg.root, classification=arg.classification)
+    testset = DualPDBset(hdf5_file=arg.data_path, group='test', num_points=arg.num_points, metric=arg.metric, root=arg.root, classification=arg.classification)
 else:
-    dataset = PDBset(hdf5_file=arg.data_path, group='train', num_points=arg.num_points, metric=arg.metric, log=arg.log, classification=arg.classification)
-    testset = PDBset(hdf5_file=arg.data_path, group='test', num_points=arg.num_points, metric=arg.metric, log=arg.log, classification=arg.classification)
+    dataset = PDBset(hdf5_file=arg.data_path, group='train', num_points=arg.num_points, metric=arg.metric, root=arg.root, classification=arg.classification)
+    testset = PDBset(hdf5_file=arg.data_path, group='test', num_points=arg.num_points, metric=arg.metric, root=arg.root, classification=arg.classification)
 
 dataloader = data.DataLoader(dataset, batch_size=arg.batch_size, shuffle=True, num_workers=1)
 testloader = data.DataLoader(testset, batch_size=arg.batch_size, shuffle=True, num_workers=1)
@@ -140,9 +140,6 @@ scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, num_batch)
 if arg.classification:
     train_loss_func = nn.CrossEntropyLoss()
     test_loss_func = nn.CrossEntropyLoss(size_average=False)
-elif arg.log:
-    train_loss_func = nn.L1Loss()
-    test_loss_func = nn.L1Loss(size_average=False)
 else:
     train_loss_func = FavorHighLoss()
     test_loss_func = FavorHighLoss(size_average=False)
@@ -257,6 +254,6 @@ if arg.classification:
     plotConfusionMatrix(mat, save_path)
 else: # Regression
     print('Creating plot...')
-    plotScatter(x1, y1, x2, y2, save_path, not arg.log)
+    plotScatter(x1, y1, x2, y2, save_path)
 
 print('Done! All files avaialable in', save_path)
