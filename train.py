@@ -158,7 +158,7 @@ print('             behaviour. Train loss can be expected to be worse under thes
 
 early_stop_count = 0
 avg_time_per_epoch = 0
-
+last_epoch = arg.epochs
 
 # Main epoch loop
 for epoch in range(arg.num_epoch):
@@ -218,13 +218,14 @@ for epoch in range(arg.num_epoch):
             early_stop_count += 1
             if early_stop_count == arg.patience:
                 print('Early stopping condition reached')
+                last_epoch = epoch+1
                 break 
         else:
             early_stop_count = 0
             saveModel(model, save_path)
             prev_test_score = test_score
 
-avg_time_per_epoch = avg_time_per_epoch/arg.num_epoch
+avg_time_per_epoch = avg_time_per_epoch/last_epoch
 print('Average time per epoch: %.2fs' %avg_time_per_epoch)
 
 # ---- REVERT TO BEST MODEL ----
