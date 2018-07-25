@@ -22,6 +22,6 @@ def plotScatter(x1, y1, x2, y2, save_path):
 
 def plotConfusionMatrix(matrix, save_path):
     plt.figure(figsize = (5,5))
-    sn.heatmap(matrix, annot=True)
+    sn.heatmap(matrix, annot=True, fmt='d', cmap='gist_heat', xticklabels=['Bad', 'Good'], yticklabels=['Bad', 'Good'])
     figname = save_path + '/matrix.png'
     plt.savefig(figname, dpi=100)

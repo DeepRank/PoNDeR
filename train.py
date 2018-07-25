@@ -226,7 +226,7 @@ for epoch in range(arg.num_epoch):
             prev_test_score = test_score
 
 avg_time_per_epoch = avg_time_per_epoch/last_epoch
-print('Average time per epoch: %.2fs' %avg_time_per_epoch)
+print('Average time per epoch: %.2fs\n' %avg_time_per_epoch)
 
 # ---- REVERT TO BEST MODEL ----
 if arg.patience > 0:
@@ -235,7 +235,9 @@ if arg.patience > 0:
 
 # ---- PLOTTING ----
 
-print('Running eval on train set', end='\r')
+print('Running final eval on test set')
+test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA, classification=arg.classification)
+print('Running final eval on train set')
 train_score,x2,y2 = evaluateModel(model, test_loss_func, dataloader, arg.dual, arg.CUDA, classification=arg.classification)
 
 x1 = x1.cpu().data
@@ -243,14 +245,14 @@ y1 = y1.cpu().data
 x2 = x2.cpu().data
 y2 = y2.cpu().data
 
-print('Final train loss = %.5f' %(train_score))
+print('    Final train loss = %.5f' %(train_score))
 if arg.classification:
     acc = calcAccuracy(x2,y2)
-    print('  Train accuracy = %.2f' %(acc), '%')
+    print('    Train accuracy = %.2f' %(acc), '%')
 
 if arg.classification:
-    print('Creating confusion matrix...')
-    mat = calcConfusionMatrix(x2,y2)
+    print('Creating confusion matrix on test data...')
+    mat = calcConfusionMatrix(x1,y1)
     print(mat)
     plotConfusionMatrix(mat, save_path)
 else: # Regression
