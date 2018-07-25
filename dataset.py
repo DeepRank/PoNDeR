@@ -8,8 +8,8 @@ import math
 
 # No more than one worker can be used for these types of dataset as HDF5 does not multithread appropriately
 
-ROOTCUTOFF = -3.73 # Cutoff for root
-NORMCUTOFF = 0.2
+ROOTCUTOFF = 0.15 # Cutoff for rootDockQ
+NORMCUTOFF = 0.02 # Cutoff for DockQ
 
 class PDBset(data.Dataset):
     def __init__(self, hdf5_file, num_points, group='train', metric='dockQ', root=False, classification=False):
@@ -33,7 +33,7 @@ class PDBset(data.Dataset):
             cutoff = ROOTCUTOFF
         else:
             cutoff = NORMCUTOFF
-            
+
         if self.classification:
             if mtrc < cutoff:
                 mtrc = 0
