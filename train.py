@@ -105,7 +105,7 @@ print('\nMODEL SET-UP')
 
 # Architecture selection
 
-if arg.metric == 'dockQ' and not arg.classification:
+if arg.metric == 'dockQ':
     sigmoid = True
 else:
     sigmoid = False
