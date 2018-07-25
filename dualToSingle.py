@@ -1,21 +1,3 @@
-import os
-import sys
-import platform
-import datetime
-import argparse
-import math
-
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-import torch.utils.data as data
-from torch.autograd import Variable
-
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-import matplotlib.axes as axs
 import numpy as np
 import h5py
 
@@ -23,7 +5,7 @@ hf1 = h5py.File('FINAL_Full.h5','r')
 hf2 = h5py.File('FINAL_FullSingle.h5', 'w')
 
 def transferGroup(groupName):
-    hf2.create_group[groupName]
+    hf2.create_group(groupName)
 
     group1 = hf1[groupName]
     group2 = hf2[groupName]
@@ -32,8 +14,8 @@ def transferGroup(groupName):
     for key in keys:
         # Read out from old file
         subgroup1 = group1.get(key)
-        pcA = np.array(subgroup.get('A'))
-        pcB = np.array(subgroup.get(key).get('B'))
+        pcA = np.array(subgroup1.get('A'))
+        pcB = np.array(subgroup1.get(key).get('B'))
         pcA = np.c_[pcA, np.zeros_like(pcA)] # Pad right
         pcB = np.c_[np.zeros_like(pcB), pcB] # Pad left
         # Convert
