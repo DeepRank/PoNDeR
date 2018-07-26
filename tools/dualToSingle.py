@@ -15,7 +15,7 @@ def transferGroup(groupName):
         # Read out from old file
         subgroup1 = group1.get(key)
         pcA = np.array(subgroup1.get('A'))
-        pcB = np.array(subgroup1.get(key).get('B'))
+        pcB = np.array(subgroup1.get('B'))
         pcA = np.c_[pcA, np.zeros_like(pcA)] # Pad right
         pcB = np.c_[np.zeros_like(pcB), pcB] # Pad left
         # Convert
