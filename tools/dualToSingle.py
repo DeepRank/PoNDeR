@@ -8,6 +8,8 @@ Script to convert from dual to single datasets
 hf1 = h5py.File('FINAL_FullDual.h5','r') # File to be read
 hf2 = h5py.File('FINAL_FullSingle.h5', 'w') # File to be written (will be created)
 
+hf2.attrs['feat_width'] = 12
+
 def transferGroup(groupName):
     hf2.create_group(groupName)
 
