@@ -1,8 +1,12 @@
 import numpy as np
 import h5py
 
-hf1 = h5py.File('FINAL_FullDual.h5','r')
-hf2 = h5py.File('FINAL_FullSingle.h5', 'w')
+'''
+Script to convert from dual to single datasets
+'''
+
+hf1 = h5py.File('FINAL_FullDual.h5','r') # File to be read
+hf2 = h5py.File('FINAL_FullSingle.h5', 'w') # File to be written (will be created)
 
 def transferGroup(groupName):
     hf2.create_group(groupName)
