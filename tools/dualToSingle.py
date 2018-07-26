@@ -1,7 +1,7 @@
 import numpy as np
 import h5py
 
-hf1 = h5py.File('FINAL_Full.h5','r')
+hf1 = h5py.File('FINAL_FullDual.h5','r')
 hf2 = h5py.File('FINAL_FullSingle.h5', 'w')
 
 def transferGroup(groupName):
@@ -26,6 +26,7 @@ def transferGroup(groupName):
         ds.attrs['lrmsd'] = subgroup1.attrs['lrmsd']
         ds.attrs['fnat']  = subgroup1.attrs['fnat']
         ds.attrs['dockQ'] = subgroup1.attrs['dockQ']
+        print(key, 'done')
 
 transferGroup('train')
 transferGroup('test')
