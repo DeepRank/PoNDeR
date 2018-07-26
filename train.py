@@ -138,8 +138,8 @@ scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, num_batch)
 
 # Loss function
 if arg.classification:
-    train_loss_func = nn.NLLLoss()
-    test_loss_func = nn.NLLLoss(size_average=False)
+    train_loss_func = nn.CrossEntropyLoss()
+    test_loss_func = nn.CrossEntropyLoss(size_average=False)
 else:
     train_loss_func = FavorHighLoss()
     test_loss_func = FavorHighLoss(size_average=False)
