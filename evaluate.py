@@ -1,7 +1,7 @@
 import torch
 from torch.autograd import Variable
 import torch.nn.functional as F
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, f1_score
 
 def evaluateModel(model, loss_func, testloader, dual=False, CUDA=False, classification=False):
     model.eval()  # Set to testing mode
@@ -27,9 +27,9 @@ def evaluateModel(model, loss_func, testloader, dual=False, CUDA=False, classifi
     return loss_sum / cnt, torch.cat(targets), torch.cat(predictions)
 
 # Returns classification accuracy in percent
-def calcAccuracy(truth, pred):
-    _, max_indices = torch.max(pred,1)
-    return 100*(max_indices == truth).sum()/len(truth)
+def calcF1(truth, pred):
+    _, predLabel = torch.max(pred,1) # To label
+    return f1_score(truth, predLabel)
 
 # Returns confusion matrix
 def calcConfusionMatrix(truth, pred):
