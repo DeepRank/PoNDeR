@@ -152,7 +152,7 @@ prev_test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader, arg.dua
 print('    Before training - Test loss = %.5f' %(prev_test_score), flush=True)
 if arg.classification:
     acc = calcMCC(x1.cpu().data,y1.cpu().data)
-    print('                      Test accuracy = %.2f' %(acc), '%', flush=True)
+    print('                      Test accuracy = %.2f' %(acc), flush=True)
 print('\n    WARNING: Train loss is with the model in eval mode, this alters dropout and batchnorm')
 print('             behaviour. Train loss can be expected to be worse under these conditions\n')
 
@@ -205,7 +205,7 @@ for epoch in range(arg.num_epoch):
     print('        Test loss = %.5f' %(test_score))
     if arg.classification:
         acc = calcMCC(x1.cpu().data,y1.cpu().data)
-        print('        Test accuracy = %.2f' %(acc), '%\n')
+        print('        Test accuracy = %.2f' %(acc), '\n')
     else: 
         r2 = sklearn.metrics.r2_score(x1.cpu().data, y1.cpu().data)
         print('        Test R2 = %.2f' %(r2), '\n')
@@ -248,7 +248,7 @@ y2 = y2.cpu().data
 print('    Final train loss = %.5f' %(train_score))
 if arg.classification:
     acc = calcMCC(x2,y2)
-    print('    Train accuracy = %.2f' %(acc), '%')
+    print('    Train accuracy = %.2f' %(acc))
 
 if arg.classification:
     print('Creating confusion matrix on test data...')
