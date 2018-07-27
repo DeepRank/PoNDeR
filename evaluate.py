@@ -26,17 +26,22 @@ def evaluateModel(model, loss_func, testloader, dual=False, CUDA=False, classifi
     model.train()
     return loss_sum / cnt, torch.cat(targets), torch.cat(predictions)
 
+# Convert prediction to labels
+def predToLabel(pred):
+    _, pred_label = torch.max(pred,1)
+    return pred_label
+
 # Returns Matthew Correlation Coefficient
 def calcMCC(truth, pred):
-    _, pred_label = torch.max(pred,1)
+    pred_label = predToLabel(pred)
     return matthews_corrcoef(truth, pred_label)
 
 # Returns F1 score
 def calcF1(truth, pred):
-    _, pred_label = torch.max(pred,1)
+    pred_label = predToLabel(pred)
     return f1_score(truth, pred_label)
 
 # Returns confusion matrix
 def calcConfusionMatrix(truth, pred):
-    _, pred_label = torch.max(pred,1)
+    pred_label = predToLabel(pred)
     return confusion_matrix(truth, pred_label)

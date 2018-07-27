@@ -202,9 +202,9 @@ for epoch in range(arg.num_epoch):
     print('        Test loss = %.5f' %(test_score))
     if arg.classification:
         mcc = calcMCC(x1.cpu().data,y1.cpu().data)
-        print('        Test MCC  = %.2f' %(mcc))
+        print('        Test MCC  = %.3f' %(mcc))
         f1 = calcF1(x1.cpu().data,y1.cpu().data)
-        print('        Test F1   = %.2f' %(f1), '\n')
+        print('        Test F1   = %.3f' %(f1), '\n')
     else: 
         r2 = sklearn.metrics.r2_score(x1.cpu().data, y1.cpu().data)
         print('        Test R2 = %.2f' %(r2), '\n')
