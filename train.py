@@ -156,6 +156,7 @@ print('             behaviour. Train loss can be expected to be worse under thes
 early_stop_count = 0
 avg_time_per_epoch = 0
 last_epoch = arg.num_epoch
+best_epoch = 0
 
 # Main epoch loop
 for epoch in range(arg.num_epoch):
@@ -223,13 +224,14 @@ for epoch in range(arg.num_epoch):
             early_stop_count = 0
             saveModel(model, save_path)
             prev_test_score = test_score
+            best_epoch = epoch+1
 
 avg_time_per_epoch = avg_time_per_epoch/last_epoch
 print('Average time per epoch: %.2fs\n' %avg_time_per_epoch)
 
 # ---- REVERT TO BEST MODEL ----
 if arg.patience > 0:
-    print('Load best known configuration (epoch %d)\n' %last_epoch)    
+    print('Load best known configuration (epoch %d)\n' %best_epoch)    
     model.load_state_dict(torch.load('%s/PoNDeR.pth' % (save_path))) # Load best known configuration
 
 # ---- PLOTTING ----
