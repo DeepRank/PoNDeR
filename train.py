@@ -16,7 +16,7 @@ import torch.utils.data as data
 from torch.autograd import Variable
 
 from PPIPointNet import PointNet, DualPointNet
-from evaluate import evaluateModel, calcMCC, calcConfusionMatrix
+from evaluate import evaluateModel, calcMCC, calcConfusionMatrix, calcF1
 from dataset import PDBset, DualPDBset
 from utils import get_lr, saveModel, FavorHighLoss
 from plotLoss import plotScatter, plotConfusionMatrix
@@ -118,7 +118,7 @@ else:
 # GPU  & GPU parallellization
 if arg.CUDA:
     net.cuda()
-    model = torch.nn.DataParallel(net) 
+    model = torch.nn.DataParallel(net)
 else:
     model = net
 
@@ -149,11 +149,8 @@ print('\nTRAINING')
 model.train()  # Set to training mode
 
 prev_test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA, classification=arg.classification)
-print('    Before training - Test loss = %.5f' %(prev_test_score), flush=True)
-if arg.classification:
-    acc = calcMCC(x1.cpu().data,y1.cpu().data)
-    print('                      Test accuracy = %.2f' %(acc), flush=True)
-print('\n    WARNING: Train loss is with the model in eval mode, this alters dropout and batchnorm')
+print('    Before training - Test loss = %.5f\n' %(prev_test_score), flush=True)
+print('    WARNING: Train loss is with the model in eval mode, this alters dropout and batchnorm')
 print('             behaviour. Train loss can be expected to be worse under these conditions\n')
 
 early_stop_count = 0
@@ -204,8 +201,10 @@ for epoch in range(arg.num_epoch):
     print('E: %02d - Mean train loss = %.5f              ' %(epoch+1, avg_train_score/num_batch))
     print('        Test loss = %.5f' %(test_score))
     if arg.classification:
-        acc = calcMCC(x1.cpu().data,y1.cpu().data)
-        print('        Test accuracy = %.2f' %(acc), '\n')
+        mcc = calcMCC(x1.cpu().data,y1.cpu().data)
+        print('        Test MCC  = %.2f' %(mcc))
+        f1 = calcF1(x1.cpu().data,y1.cpu().data)
+        print('        Test F1   = %.2f' %(f1), '\n')
     else: 
         r2 = sklearn.metrics.r2_score(x1.cpu().data, y1.cpu().data)
         print('        Test R2 = %.2f' %(r2), '\n')
@@ -230,25 +229,22 @@ print('Average time per epoch: %.2fs\n' %avg_time_per_epoch)
 
 # ---- REVERT TO BEST MODEL ----
 if arg.patience > 0:
-    print('Load best known configuration (test loss = %.5f)\n' %prev_test_score)    
+    print('Load best known configuration (epoch %d)\n' %last_epoch)    
     model.load_state_dict(torch.load('%s/PoNDeR.pth' % (save_path))) # Load best known configuration
 
 # ---- PLOTTING ----
 
-print('Running final eval on test set')
+print('Running final eval on test set...')
 test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA, classification=arg.classification)
-print('Running final eval on train set')
+print('Running final eval on train set...')
 train_score,x2,y2 = evaluateModel(model, test_loss_func, dataloader, arg.dual, arg.CUDA, classification=arg.classification)
 
+# Test
 x1 = x1.cpu().data
 y1 = y1.cpu().data
+# Train
 x2 = x2.cpu().data
 y2 = y2.cpu().data
-
-print('    Final train loss = %.5f' %(train_score))
-if arg.classification:
-    acc = calcMCC(x2,y2)
-    print('    Train accuracy = %.2f' %(acc))
 
 if arg.classification:
     print('Creating confusion matrix on test data...')

@@ -1,7 +1,7 @@
 import torch
 from torch.autograd import Variable
 import torch.nn.functional as F
-from sklearn.metrics import confusion_matrix, matthews_corrcoef
+from sklearn.metrics import confusion_matrix, matthews_corrcoef, f1_score
 
 def evaluateModel(model, loss_func, testloader, dual=False, CUDA=False, classification=False):
     model.eval()  # Set to testing mode
@@ -28,10 +28,15 @@ def evaluateModel(model, loss_func, testloader, dual=False, CUDA=False, classifi
 
 # Returns Matthew Correlation Coefficient
 def calcMCC(truth, pred):
-    _, predLabel = torch.max(pred,1) # To label
-    return matthews_corrcoef(truth, predLabel)
+    _, pred_label = torch.max(pred,1)
+    return matthews_corrcoef(truth, pred_label)
+
+# Returns F1 score
+def calcF1(truth, pred):
+    _, pred_label = torch.max(pred,1)
+    return f1_score(truth, pred_label)
 
 # Returns confusion matrix
 def calcConfusionMatrix(truth, pred):
-    _, max_indices = torch.max(pred,1)
-    return confusion_matrix(truth, max_indices)
+    _, pred_label = torch.max(pred,1)
+    return confusion_matrix(truth, pred_label)
