@@ -16,7 +16,7 @@ import torch.utils.data as data
 from torch.autograd import Variable
 
 from PPIPointNet import PointNet, DualPointNet
-from evaluate import evaluateModel, calcF1, calcConfusionMatrix
+from evaluate import evaluateModel, calcMCC, calcConfusionMatrix
 from dataset import PDBset, DualPDBset
 from utils import get_lr, saveModel, FavorHighLoss
 from plotLoss import plotScatter, plotConfusionMatrix
@@ -151,7 +151,7 @@ model.train()  # Set to training mode
 prev_test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA, classification=arg.classification)
 print('    Before training - Test loss = %.5f' %(prev_test_score), flush=True)
 if arg.classification:
-    acc = calcF1(x1.cpu().data,y1.cpu().data)
+    acc = calcMCC(x1.cpu().data,y1.cpu().data)
     print('                      Test accuracy = %.2f' %(acc), '%', flush=True)
 print('\n    WARNING: Train loss is with the model in eval mode, this alters dropout and batchnorm')
 print('             behaviour. Train loss can be expected to be worse under these conditions\n')
@@ -204,7 +204,7 @@ for epoch in range(arg.num_epoch):
     print('E: %02d - Mean train loss = %.5f              ' %(epoch+1, avg_train_score/num_batch))
     print('        Test loss = %.5f' %(test_score))
     if arg.classification:
-        acc = calcF1(x1.cpu().data,y1.cpu().data)
+        acc = calcMCC(x1.cpu().data,y1.cpu().data)
         print('        Test accuracy = %.2f' %(acc), '%\n')
     else: 
         r2 = sklearn.metrics.r2_score(x1.cpu().data, y1.cpu().data)
@@ -247,7 +247,7 @@ y2 = y2.cpu().data
 
 print('    Final train loss = %.5f' %(train_score))
 if arg.classification:
-    acc = calcF1(x2,y2)
+    acc = calcMCC(x2,y2)
     print('    Train accuracy = %.2f' %(acc), '%')
 
 if arg.classification:
