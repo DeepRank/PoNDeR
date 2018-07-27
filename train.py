@@ -150,6 +150,13 @@ model.train()  # Set to training mode
 
 prev_test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA, classification=arg.classification)
 print('    Before training - Test loss = %.5f\n' %(prev_test_score), flush=True)
+
+if arg.classification:
+    mcc = calcMCC(x1.cpu().data,y1.cpu().data)
+    print('                      Test MCC  = %.3f' %(mcc))
+    f1 = calcF1(x1.cpu().data,y1.cpu().data)
+    print('                      Test F1   = %.3f' %(f1), '\n')
+
 print('    WARNING: Train loss is with the model in eval mode, this alters dropout and batchnorm')
 print('             behaviour. Train loss can be expected to be worse under these conditions\n')
 
