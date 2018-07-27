@@ -240,6 +240,7 @@ print('Running final eval on test set...')
 test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA, classification=arg.classification)
 print('Running final eval on train set...')
 train_score,x2,y2 = evaluateModel(model, test_loss_func, dataloader, arg.dual, arg.CUDA, classification=arg.classification)
+print('Final train score = ', train_score)
 
 # Test
 x1 = x1.cpu().data
