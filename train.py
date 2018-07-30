@@ -37,11 +37,11 @@ parser.add_argument('--model',      type=str, default='',   help='Model input pa
 parser.add_argument('--data_path',  type=str, default='~', help='Path to HDF5 file')
 parser.add_argument('--lr',         type=float, default=0.0001, help='Learning rate (default = 0.0001)')
 parser.add_argument('--optimizer',  type=str, default='Adam', help='What optimizer to use. Options: Adam, SGD, SGD_cos')
-parser.add_argument('--avg_pool',   dest='avg_pool', default=False, action='store_true', help='Use average pooling after for feature pooling (instead of default max pooling)')
+parser.add_argument('--avg_pool',   dest='avg_pool', default=False, action='store_true', help='Use average pooling for feature pooling (instead of default max pooling)')
 parser.add_argument('--dual',       dest='dual', default=False, action='store_true', help='Use DualPointNet architecture')
 parser.add_argument('--metric',     type=str, default='dockQ',   help='Metric to be used. Options: irmsd, lrmsd, fnat, dockQ (default)')
 parser.add_argument('--dropout',    type=float, default=0.5, help='Dropout rate in last layer. When 0 replaced by batchnorm (default = 0.5)')
-parser.add_argument('--root',       dest='root', default=False, action='store_true', help='Apply square root on metric')
+parser.add_argument('--root',       dest='root', default=False, action='store_true', help='Apply square root on metric (for DockQ score balancing)')
 parser.add_argument('--patience',   type=int, default=5, help='Number of epochs to observe overfitting before early stopping')
 parser.add_argument('--classification',dest='classification', default=False, action='store_true', help='Classification instead of regression')
 
