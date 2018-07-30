@@ -141,9 +141,13 @@ scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, num_batch)
 if arg.classification:
     train_loss_func = nn.CrossEntropyLoss()
     test_loss_func = nn.CrossEntropyLoss(size_average=False)
-else:
+elif sigmoid: # For metrics limited to [0,1] (DockQ, FNAT)
     train_loss_func = FavorHighLoss()
     test_loss_func = FavorHighLoss(size_average=False)
+else:
+    train_loss_func = nn.MSELoss()
+    test_loss_func = nn.MSELoss(size_average=False)
+
 
 # ---- MODEL TRAINING ----
 print('\nTRAINING')
@@ -263,11 +267,6 @@ if arg.classification:
     plotConfusionMatrix(mat, save_path)
 else: # Regression
     print('Creating plot...')
-
-    if sigmoid: # Upper limit of 1 (for DockQ and FNAT)
-        limit = True
-    else:
-        limit = False
-    plotScatter(x1, y1, x2, y2, save_path, limit=False)
+    plotScatter(x1, y1, x2, y2, save_path, limit=sigmoid)
 
 print('Done! All files avaialable in', save_path)
