@@ -21,7 +21,9 @@ from dataset import PDBset, DualPDBset
 from utils import get_lr, saveModel, FavorHighLoss
 from plotLoss import plotScatter, plotConfusionMatrix
 
-time = datetime.datetime.now()
+'''
+Main training script. Produces a new folder with model (weights) and plot of classification/regression result.
+'''
 
 # ---- OPTION PARSING ----
 
@@ -44,7 +46,7 @@ parser.add_argument('--patience',   type=int, default=5, help='Number of epochs 
 parser.add_argument('--classification',dest='classification', default=False, action='store_true', help='Classification instead of regression')
 
 arg = parser.parse_args()
-
+time = datetime.datetime.now()
 save_path = arg.out_folder+'/'+time.strftime('%d%m-%H%M')
 
 if not os.path.exists(save_path):
@@ -68,26 +70,25 @@ num_batch = len(dataset)/arg.batch_size
 print('ABOUT')
 print('    Simplified PointNet for Protein-Protein Reaction')
 print('    Lukas De Clercq, 2018, Netherlands eScience Center')
-print('    See attached license\n')
+print('    See attached license (Apache 2.0)')
 
-print('RUNTIME INFORMATION')
+print('\nRUNTIME INFORMATION')
 print('    System    -', platform.system(), platform.release(), platform.machine())
 print('    Version   -', platform.version())
 print('    Node      -', platform.node())
-print('    Time      -', time, 'UTC', '\n')
+print('    Time      -', time, 'UTC')
 
-print('LIBRARY VERSIONS')
+print('\nLIBRARY VERSIONS')
 print('    Python    -', platform.python_version(), 'on', platform.python_compiler())
 print('    Pytorch   -', torch.__version__)
 print('    CUDA      -', torch.version.cuda)
-print('    CUDNN     -', torch.backends.cudnn.version(), '\n')
+print('    CUDNN     -', torch.backends.cudnn.version())
 
-print('RUN PARAMETERS')
+print('\nRUN PARAMETERS')
 for a in vars(arg):
     print('    ', a, getattr(arg, a))
-print('')
 
-print('DATA PARAMETERS')
+print('\nDATA PARAMETERS')
 print('    Test & train sizes: %d & %d -> %.1f' %(len(testset), len(dataset), 100*len(testset)/len(dataset)), '%')
 
 if arg.classification:
@@ -115,7 +116,7 @@ if arg.dual:
 else:
     net = PointNet(num_points=arg.num_points, in_channels=dataset.getFeatWidth(), avgPool=arg.avg_pool, sigmoid=sigmoid, dropout=arg.dropout, classification=arg.classification)
 
-# GPU  & GPU parallellization
+# GPU & GPU parallellization
 if arg.CUDA:
     net.cuda()
     model = torch.nn.DataParallel(net)
@@ -215,7 +216,7 @@ for epoch in range(arg.num_epoch):
         print('        Test F1   = %.3f' %(f1), '\n')
     else: 
         r2 = sklearn.metrics.r2_score(x1.cpu().data, y1.cpu().data)
-        print('        Test R2 = %.2f' %(r2), '\n')
+        print('        Test R² = %.2f' %(r2), '\n')
     
     avg_time_per_epoch += (timer() - start)
 
@@ -242,12 +243,11 @@ if arg.patience > 0:
     model.load_state_dict(torch.load('%s/PoNDeR.pth' % (save_path))) # Load best known configuration
 
 # ---- PLOTTING ----
-
 print('Running final eval on test set...')
 test_score,x1,y1 = evaluateModel(model, test_loss_func, testloader, arg.dual, arg.CUDA, classification=arg.classification)
 print('Running final eval on train set...')
 train_score,x2,y2 = evaluateModel(model, test_loss_func, dataloader, arg.dual, arg.CUDA, classification=arg.classification)
-print('Final train score = ', train_score)
+print('Final train score = %.5f' %train_score)
 
 # Test
 x1 = x1.cpu().data
