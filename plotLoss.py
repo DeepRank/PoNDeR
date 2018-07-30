@@ -15,14 +15,13 @@ Plotting functions for model inspection
 def plotScatter(x1, y1, x2, y2, save_path, limit=False):
     fig, ax = plt.subplots()
     fig.set_size_inches(5, 5)
-    ax.set_xlim(xmin=0.0) # All scores are > 0
-    ax.set_ylim(ymin=0.0)
     if limit:
-        ax.set_xlim(xmax=1.0)
-        ax.set_ylim(ymax=1.0)
+        upper_bound = 1.0
     else:
-        ax.set_xlim(xmax=50.0)
-        ax.set_ylim(ymax=50.0)
+        upper_bound = 50.0
+    # All scores are > 0
+    ax.set_xlim(xmin=0.0, xmax=upper_bound) 
+    ax.set_ylim(ymin=0.0, ymax=upper_bound)
     ax.scatter(x2,y2, label='Train',s=1)
     ax.scatter(x1,y1, label='Test' ,s=1)
     ax.set_ylabel('Prediction')
