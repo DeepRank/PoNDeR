@@ -106,7 +106,7 @@ print('\nMODEL SET-UP')
 
 # Architecture selection
 
-if arg.metric == 'dockQ':
+if arg.metric == 'dockQ' or arg.metric == 'fnat':
     sigmoid = True
 else:
     sigmoid = False
@@ -263,7 +263,8 @@ if arg.classification:
     plotConfusionMatrix(mat, save_path)
 else: # Regression
     print('Creating plot...')
-    if arg.metric == 'fnat' or arg.metric == 'dockQ':
+
+    if sigmoid: # Upper limit of 1 (for DockQ and FNAT)
         limit = True
     else:
         limit = False
