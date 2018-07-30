@@ -7,6 +7,11 @@ import matplotlib.axes as axs
 import seaborn as sn
 import pandas as pd
 
+'''
+Plotting functions for model inspection
+'''
+
+# Create scatterplot (for regression)
 def plotScatter(x1, y1, x2, y2, save_path):
     fig, ax = plt.subplots()
     fig.set_size_inches(5, 5)
@@ -20,6 +25,7 @@ def plotScatter(x1, y1, x2, y2, save_path):
     figname = save_path + '/scatter.png'
     fig.savefig(figname, dpi=100)
 
+# Create confusion matrix (for classification)
 def plotConfusionMatrix(matrix, save_path):
     plt.figure(figsize = (5,5))
     sn.heatmap(matrix, annot=True, fmt='d', cmap='gist_heat', xticklabels=['Bad', 'Good'], yticklabels=['Bad', 'Good'], vmin=0)
