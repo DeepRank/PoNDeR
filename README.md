@@ -22,6 +22,7 @@ Other adaptations include cosine annealing learning rate decay, which has been i
 
 *python train.py*
 
+'''
   --batch_size BATCH_SIZE   Input batch size (default = 256)
   --num_points NUM_POINTS   Points per point cloud used (default = 1024)
   --num_epoch NUM_EPOCH     Number of epochs to train for (default = 15)
@@ -38,6 +39,7 @@ Other adaptations include cosine annealing learning rate decay, which has been i
   --root                    Apply square root on metric (for DockQ score balancing)
   --patience PATIENCE       Number of epochs to observe overfitting before early stopping
   --classification          Classification instead of regression
+'''
 
 The network takes the atoms taking part in an interaction as point cloud data. Data conversion can be performed using the *extract_pc.py* script.
 
