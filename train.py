@@ -263,6 +263,10 @@ if arg.classification:
     plotConfusionMatrix(mat, save_path)
 else: # Regression
     print('Creating plot...')
-    plotScatter(x1, y1, x2, y2, save_path)
+    if arg.metric == 'fnat' or arg.metric == 'dockQ':
+        limit = True
+    else:
+        limit = False
+    plotScatter(x1, y1, x2, y2, save_path, limit=False)
 
 print('Done! All files avaialable in', save_path)
