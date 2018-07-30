@@ -12,13 +12,9 @@ Plotting functions for model inspection
 '''
 
 # Create scatterplot (for regression)
-def plotScatter(x1, y1, x2, y2, save_path, limit=False):
+def plotScatter(x1, y1, x2, y2, save_path, upper_bound):
     fig, ax = plt.subplots()
     fig.set_size_inches(5, 5)
-    if limit:
-        upper_bound = 1.0
-    else:
-        upper_bound = 50.0
     # All scores are > 0
     ax.set_xlim(xmin=0.0, xmax=upper_bound) 
     ax.set_ylim(ymin=0.0, ymax=upper_bound)

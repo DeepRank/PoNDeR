@@ -267,6 +267,12 @@ if arg.classification:
     plotConfusionMatrix(mat, save_path)
 else: # Regression
     print('Creating plot...')
-    plotScatter(x1, y1, x2, y2, save_path, limit=sigmoid)
+    if arg.metric == 'dockQ' or arg.metric == 'fnat':
+        upper_bound = 1.0
+    elif arg.metric == 'irmsd':
+        upper_bound = 50.0
+    elif arg.metric == 'lrmsd':
+        upper_bound = 100.0
+    plotScatter(x1, y1, x2, y2, save_path, upper_bound)
 
 print('Done! All files avaialable in', save_path)
