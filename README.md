@@ -48,4 +48,3 @@ Data is saved in HDF5 format containing 3 groups: train, test and "holdout" data
 # Current state
 
 * Architecture & training scripts have been fully implemented
-* Multiple tests have shown inadequacy of all tested architectures. It is deemed unlikely that PointNet or PointNet derivatives can produce an acceptable scoring model.
